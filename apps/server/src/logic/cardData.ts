@@ -9,7 +9,8 @@ export interface CardDefinition {
     | "move_to"
     | "move_relative"
     | "collect_from_players"
-    | "pay_to_players";
+    | "pay_to_players"
+    | "jail_free_card";
   /** Coins to gain/lose, coins per player, or spaces to move (negative = backward) */
   amount?: number;
   /** Target board space index for move_to effect */
@@ -60,12 +61,11 @@ export const COMMUNITY_CARDS: CardDefinition[] = [
     amount: 100,
   },
   {
-    id: "comm_city_assessment",
+    id: "comm_jail_free",
     deck: "community",
-    title: "City Assessment",
-    description: "City assessment. Pay 75 coins.",
-    effect: "lose_coins",
-    amount: 75,
+    title: "Get Out of Jail Free",
+    description: "Keep this card until needed. Get out of Jail free!",
+    effect: "jail_free_card",
   },
   {
     id: "comm_birthday",
@@ -145,12 +145,11 @@ export const CHANCE_CARDS: CardDefinition[] = [
     amount: -3,
   },
   {
-    id: "chance_shortcut",
+    id: "chance_jail_free",
     deck: "chance",
-    title: "Shortcut",
-    description: "Shortcut! Move forward 2 spaces.",
-    effect: "move_relative",
-    amount: 2,
+    title: "Get Out of Jail Free",
+    description: "Keep this card until needed. Get out of Jail free!",
+    effect: "jail_free_card",
   },
   {
     id: "chance_crossword",

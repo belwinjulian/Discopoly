@@ -12,6 +12,9 @@ import {
   HOTEL_COST,
   DISTRICT_PROPERTIES,
   MAX_HOUSES,
+  JAIL_FINE,
+  JAIL_SPACE_INDEX,
+  MAX_JAIL_TURNS,
 } from "./boardConfig.js";
 import {
   CardDefinition,
@@ -85,6 +88,23 @@ export function movePlayer(player: Player, spaces: number): boolean {
 }
 
 /**
+ * Send a player to jail.
+ */
+export function sendToJail(player: Player): void {
+  player.position = JAIL_SPACE_INDEX;
+  player.inJail = true;
+  player.jailTurnsRemaining = MAX_JAIL_TURNS;
+}
+
+/**
+ * Release a player from jail.
+ */
+export function releaseFromJail(player: Player): void {
+  player.inJail = false;
+  player.jailTurnsRemaining = 0;
+}
+
+/**
  * Process what happens when a player lands on their current space.
  * Returns a description of what happened.
  */
@@ -102,15 +122,12 @@ export function processLanding(state: GameState, player: Player): string {
     case "tax":
       return processTaxLanding(state, player, space);
 
-    case "trafficJam":
-      player.skipNextTurn = true;
-      return `${player.displayName} hit a Traffic Jam! Skip next turn.`;
+    case "jail":
+      return `${player.displayName} is just visiting Jail.`;
 
-    case "goDetour":
-      // Send to Traffic Jam (index 7)
-      player.position = 7;
-      player.skipNextTurn = true;
-      return `${player.displayName} took a Detour! Sent to Traffic Jam.`;
+    case "goToJail":
+      sendToJail(player);
+      return `${player.displayName} was sent to Jail!`;
 
     case "parking":
       return `${player.displayName} is at City Parking. Nothing happens.`;
@@ -432,14 +449,6 @@ export function advanceTurn(state: GameState): string {
   // Check max rounds
   if (state.turnCount >= MAX_ROUNDS * activePlayers.length) {
     return endGame(state);
-  }
-
-  // Check if next player should skip their turn
-  if (nextPlayer.skipNextTurn) {
-    nextPlayer.skipNextTurn = false;
-    state.lastAction = `${nextPlayer.displayName} is stuck in traffic! Turn skipped.`;
-    // Recursively advance to next player
-    return advanceTurn(state);
   }
 
   return `${nextPlayer.displayName}'s turn.`;
@@ -770,6 +779,11 @@ function applyCardEffect(state: GameState, card: CardDefinition, player: Player)
       }
       player.coins += totalCollected;
       return `${player.displayName} drew "${card.title}" — collected ${totalCollected} coins from other players!`;
+    }
+
+    case "jail_free_card": {
+      player.jailFreeCards++;
+      return `${player.displayName} drew "${card.title}" — card kept for later use!`;
     }
 
     case "pay_to_players": {

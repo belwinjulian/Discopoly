@@ -201,13 +201,14 @@ export const App: React.FC = () => {
     const isMyTurn = currentPlayer?.sessionId === mySessionId;
 
     // If it's my turn, I've rolled, no buy prompt, and no build options → auto end turn
+    // Don't auto-end if still in jail (failed doubles roll)
     if (isMyTurn && gameState.hasRolled && !gameState.awaitingBuy) {
       const myPlayer = gameState.players.get(mySessionId);
-      const hasBuildOptions = myPlayer
+      const hasBuildOptions = myPlayer && !myPlayer.inJail
         ? canPlayerBuild(gameState.boardSpaces, mySessionId, myPlayer.coins)
         : false;
 
-      if (!hasBuildOptions) {
+      if (!hasBuildOptions && !myPlayer?.inJail) {
         if (autoEndTimerRef.current) clearTimeout(autoEndTimerRef.current);
         autoEndTimerRef.current = setTimeout(() => {
           sendMessage("end_turn");
@@ -252,6 +253,12 @@ export const App: React.FC = () => {
   }, [sendMessage]);
   const handleEndTurn = useCallback(() => {
     sendMessage("end_turn");
+  }, [sendMessage]);
+  const handlePayJailFine = useCallback(() => {
+    sendMessage("pay_jail_fine");
+  }, [sendMessage]);
+  const handleUseJailCard = useCallback(() => {
+    sendMessage("use_jail_card");
   }, [sendMessage]);
 
   // Trade state
@@ -428,6 +435,8 @@ export const App: React.FC = () => {
             onBuildHouse={handleBuildHouse}
             onBuildHotel={handleBuildHotel}
             onEndTurn={handleEndTurn}
+            onPayJailFine={handlePayJailFine}
+            onUseJailCard={handleUseJailCard}
           />
           <button
             className="controls-btn controls-btn-quit"

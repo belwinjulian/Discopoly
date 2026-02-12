@@ -13,6 +13,8 @@ interface GameControlsProps {
   onBuildHouse: (spaceIndex: number) => void;
   onBuildHotel: (spaceIndex: number) => void;
   onEndTurn: () => void;
+  onPayJailFine: () => void;
+  onUseJailCard: () => void;
 }
 
 /** Check if a player owns all properties in a district */
@@ -81,6 +83,8 @@ export const GameControls: React.FC<GameControlsProps> = ({
   onBuildHouse,
   onBuildHotel,
   onEndTurn,
+  onPayJailFine,
+  onUseJailCard,
 }) => {
   const [showBuild, setShowBuild] = useState(false);
 
@@ -124,7 +128,33 @@ export const GameControls: React.FC<GameControlsProps> = ({
       {/* Action buttons */}
       {isMyTurn && (
         <div className="controls-actions">
-          {!gameState.hasRolled && (
+          {/* Jail panel: shown when in jail and haven't rolled yet */}
+          {myPlayer.inJail && !gameState.hasRolled && (
+            <div className="controls-jail-panel">
+              <span className="controls-jail-label">🔒 In Jail — {myPlayer.jailTurnsRemaining} attempt(s) left</span>
+              <button
+                className="controls-btn controls-btn-jail-fine"
+                onClick={onPayJailFine}
+                disabled={myPlayer.coins < 50}
+              >
+                💰 Pay $50 Fine
+              </button>
+              {myPlayer.jailFreeCards > 0 && (
+                <button
+                  className="controls-btn controls-btn-jail-card"
+                  onClick={onUseJailCard}
+                >
+                  🃏 Use Get Out of Jail Free Card
+                </button>
+              )}
+              <button className="controls-btn controls-btn-roll" onClick={onRollDice}>
+                🎲 Roll for Doubles
+              </button>
+            </div>
+          )}
+
+          {/* Normal roll button (not in jail) */}
+          {!myPlayer.inJail && !gameState.hasRolled && (
             <button className="controls-btn controls-btn-roll" onClick={onRollDice}>
               🎲 Roll Dice
             </button>
@@ -155,7 +185,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
 
           {gameState.hasRolled && !gameState.awaitingBuy && (
             <div className="controls-post-roll">
-              {canBuild && (
+              {!myPlayer.inJail && canBuild && (
                 <button
                   className="controls-btn controls-btn-build"
                   onClick={() => setShowBuild(!showBuild)}

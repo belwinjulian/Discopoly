@@ -28,10 +28,10 @@ export const BoardSpaceComponent: React.FC<BoardSpaceProps> = ({
     switch (space.spaceType) {
       case "payday":
         return "💰";
-      case "trafficJam":
-        return "🚗";
-      case "goDetour":
-        return "🔀";
+      case "jail":
+        return "🚓";
+      case "goToJail":
+        return "👮";
       case "parking":
         return "🅿️";
       case "tax":
@@ -91,14 +91,15 @@ export const BoardSpaceComponent: React.FC<BoardSpaceProps> = ({
           {playersHere.map((p) => (
             <div
               key={p.sessionId}
-              className="board-space-token board-space-token-moved"
+              className={`board-space-token board-space-token-moved${p.inJail ? " board-space-token-jailed" : ""}`}
               style={{
                 backgroundColor:
                   PLAYER_COLORS[p.playerIndex % PLAYER_COLORS.length],
               }}
-              title={p.displayName}
+              title={p.inJail ? `${p.displayName} (In Jail)` : p.displayName}
             >
               <span className="board-token-emoji">{getPieceEmoji(p.pieceId)}</span>
+              {p.inJail && <span className="board-token-jail-icon">🔒</span>}
             </div>
           ))}
         </div>

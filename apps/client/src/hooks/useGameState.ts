@@ -11,7 +11,9 @@ export interface PlayerState {
   ownedProperties: number[];
   isActive: boolean;
   isBankrupt: boolean;
-  skipNextTurn: boolean;
+  inJail: boolean;
+  jailTurnsRemaining: number;
+  jailFreeCards: number;
   playerIndex: number;
   pieceId: string;
 }
@@ -79,7 +81,9 @@ function snapshotState(state: any): GameStateSnapshot {
           : [],
         isActive: player.isActive,
         isBankrupt: player.isBankrupt,
-        skipNextTurn: player.skipNextTurn,
+        inJail: player.inJail || false,
+        jailTurnsRemaining: player.jailTurnsRemaining || 0,
+        jailFreeCards: player.jailFreeCards || 0,
         playerIndex: player.playerIndex,
         pieceId: player.pieceId || "car",
       });

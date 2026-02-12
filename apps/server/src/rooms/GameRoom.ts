@@ -1,6 +1,6 @@
 import { Room, Client } from "colyseus";
 import { GameState, Player } from "../state/GameState.js";
-import { STARTING_COINS } from "../logic/boardConfig.js";
+import { STARTING_COINS, JAIL_FINE } from "../logic/boardConfig.js";
 import {
   initializeBoard,
   rollDice,
@@ -21,6 +21,9 @@ import {
   clearTrade,
   drawCard,
   clearDrawnCard,
+  sendToJail,
+  releaseFromJail,
+  bankruptPlayer,
 } from "../logic/gameLogic.js";
 import { shuffleDeck, COMMUNITY_CARDS, CHANCE_CARDS } from "../logic/cardData.js";
 import { getPlayer, selectPiece, updateGems } from "../db.js";
@@ -62,6 +65,8 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.onMessage("reject_trade", (client) => this.handleRejectTrade(client));
     this.onMessage("cancel_trade", (client) => this.handleCancelTrade(client));
     this.onMessage("dismiss_card", (client) => this.handleDismissCard(client));
+    this.onMessage("pay_jail_fine", (client) => this.handlePayJailFine(client));
+    this.onMessage("use_jail_card", (client) => this.handleUseJailCard(client));
 
     console.log("GameRoom created:", this.roomId);
   }
@@ -288,33 +293,67 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.state.hasRolled = true;
 
     const total = d1 + d2;
+    const isDoubles = d1 === d2;
 
-    // Move player
-    const passedPayday = movePlayer(currentPlayer, total);
-    if (passedPayday) {
-      currentPlayer.coins += 200; // PAYDAY_BONUS
-      this.state.lastAction = `${currentPlayer.displayName} rolled ${d1}+${d2}=${total} and collected 200 coins passing Payday!`;
-    } else {
-      this.state.lastAction = `${currentPlayer.displayName} rolled ${d1}+${d2}=${total}.`;
-    }
+    // Jail logic
+    if (currentPlayer.inJail) {
+      if (isDoubles) {
+        // Rolled doubles - escape jail and move
+        releaseFromJail(currentPlayer);
+        const passedPayday = movePlayer(currentPlayer, total);
+        if (passedPayday) {
+          currentPlayer.coins += 200;
+        }
+        this.state.lastAction = `${currentPlayer.displayName} rolled doubles (${d1}+${d2})! Escaped from Jail!`;
+        const landingResult = processLanding(this.state, currentPlayer);
+        this.state.lastAction = landingResult;
 
-    // Process landing
-    const landingResult = processLanding(this.state, currentPlayer);
-    this.state.lastAction = landingResult;
-
-    // If player landed on a card space, draw a card
-    const landedSpace = this.state.boardSpaces[currentPlayer.position];
-    if (landedSpace.spaceType === "community" || landedSpace.spaceType === "chance") {
-      const deckType = landedSpace.spaceType as "community" | "chance";
-      const deck = deckType === "community" ? this.communityDeck : this.chanceDeck;
-      const result = drawCard(this.state, currentPlayer, deckType, deck);
-      // Update the deck reference (may have been reshuffled)
-      if (deckType === "community") {
-        this.communityDeck = result.deck;
+        // Draw card if landed on card space
+        this.handleCardDraw(currentPlayer);
       } else {
-        this.chanceDeck = result.deck;
+        // Failed to roll doubles
+        currentPlayer.jailTurnsRemaining--;
+        if (currentPlayer.jailTurnsRemaining <= 0) {
+          // Out of attempts - must pay fine
+          if (currentPlayer.coins >= JAIL_FINE) {
+            currentPlayer.coins -= JAIL_FINE;
+            releaseFromJail(currentPlayer);
+            // Move normally after paying
+            const passedPayday = movePlayer(currentPlayer, total);
+            if (passedPayday) {
+              currentPlayer.coins += 200;
+            }
+            this.state.lastAction = `${currentPlayer.displayName} failed to roll doubles. Auto-paid ${JAIL_FINE} coin fine and moved ${total} spaces.`;
+            const landingResult = processLanding(this.state, currentPlayer);
+            this.state.lastAction = landingResult;
+            this.handleCardDraw(currentPlayer);
+          } else {
+            // Can't pay fine - bankrupt
+            currentPlayer.coins = 0;
+            releaseFromJail(currentPlayer);
+            bankruptPlayer(this.state, currentPlayer);
+            this.state.lastAction = `${currentPlayer.displayName} couldn't pay the ${JAIL_FINE} coin jail fine and went bankrupt!`;
+          }
+        } else {
+          this.state.lastAction = `${currentPlayer.displayName} rolled ${d1}+${d2} (no doubles). Still in Jail. ${currentPlayer.jailTurnsRemaining} attempt(s) remaining.`;
+        }
       }
-      this.state.lastAction = result.message;
+    } else {
+      // Normal (not in jail) roll
+      const passedPayday = movePlayer(currentPlayer, total);
+      if (passedPayday) {
+        currentPlayer.coins += 200;
+        this.state.lastAction = `${currentPlayer.displayName} rolled ${d1}+${d2}=${total} and collected 200 coins passing Payday!`;
+      } else {
+        this.state.lastAction = `${currentPlayer.displayName} rolled ${d1}+${d2}=${total}.`;
+      }
+
+      // Process landing
+      const landingResult = processLanding(this.state, currentPlayer);
+      this.state.lastAction = landingResult;
+
+      // Draw card if landed on card space
+      this.handleCardDraw(currentPlayer);
     }
 
     // Check game over after landing
@@ -324,6 +363,22 @@ export class GameRoom extends Room<{ state: GameState }> {
       if ((this.state.phase as string) === "finished") {
         this.awardEndGameGems();
       }
+    }
+  }
+
+  /** Helper: draw a card if the player is on a community/chance space */
+  private handleCardDraw(player: Player): void {
+    const landedSpace = this.state.boardSpaces[player.position];
+    if (landedSpace.spaceType === "community" || landedSpace.spaceType === "chance") {
+      const deckType = landedSpace.spaceType as "community" | "chance";
+      const deck = deckType === "community" ? this.communityDeck : this.chanceDeck;
+      const result = drawCard(this.state, player, deckType, deck);
+      if (deckType === "community") {
+        this.communityDeck = result.deck;
+      } else {
+        this.chanceDeck = result.deck;
+      }
+      this.state.lastAction = result.message;
     }
   }
 
@@ -586,6 +641,64 @@ export class GameRoom extends Room<{ state: GameState }> {
     this.state.lastAction = `${fromPlayer?.displayName} cancelled their trade offer.`;
     clearTrade(this.state);
     console.log(`Trade cancelled by ${fromPlayer?.displayName}`);
+  }
+
+  private handlePayJailFine(client: Client): void {
+    if (this.state.phase !== "playing") return;
+
+    const currentPlayer = getCurrentPlayer(this.state);
+    if (!currentPlayer || currentPlayer.sessionId !== client.sessionId) {
+      client.send("error", { message: "It's not your turn." });
+      return;
+    }
+
+    if (!currentPlayer.inJail) {
+      client.send("error", { message: "You are not in jail." });
+      return;
+    }
+
+    if (this.state.hasRolled) {
+      client.send("error", { message: "You already rolled this turn." });
+      return;
+    }
+
+    if (currentPlayer.coins < JAIL_FINE) {
+      client.send("error", { message: `You need at least ${JAIL_FINE} coins to pay the fine.` });
+      return;
+    }
+
+    currentPlayer.coins -= JAIL_FINE;
+    releaseFromJail(currentPlayer);
+    this.state.lastAction = `${currentPlayer.displayName} paid ${JAIL_FINE} coins to get out of Jail!`;
+  }
+
+  private handleUseJailCard(client: Client): void {
+    if (this.state.phase !== "playing") return;
+
+    const currentPlayer = getCurrentPlayer(this.state);
+    if (!currentPlayer || currentPlayer.sessionId !== client.sessionId) {
+      client.send("error", { message: "It's not your turn." });
+      return;
+    }
+
+    if (!currentPlayer.inJail) {
+      client.send("error", { message: "You are not in jail." });
+      return;
+    }
+
+    if (this.state.hasRolled) {
+      client.send("error", { message: "You already rolled this turn." });
+      return;
+    }
+
+    if (currentPlayer.jailFreeCards <= 0) {
+      client.send("error", { message: "You don't have a Get Out of Jail Free card." });
+      return;
+    }
+
+    currentPlayer.jailFreeCards--;
+    releaseFromJail(currentPlayer);
+    this.state.lastAction = `${currentPlayer.displayName} used a Get Out of Jail Free card!`;
   }
 
   private handleDismissCard(client: Client): void {

@@ -1,7 +1,7 @@
 export interface BoardSpaceConfig {
   index: number;
   name: string;
-  spaceType: "property" | "tax" | "payday" | "trafficJam" | "detour" | "parking" | "goDetour" | "community" | "chance";
+  spaceType: "property" | "tax" | "payday" | "jail" | "parking" | "goToJail" | "community" | "chance";
   district: string;
   price: number;
   rent: number;
@@ -31,7 +31,7 @@ export const BOARD_SPACES: BoardSpaceConfig[] = [
   { index: 6,  name: "Pottery Lane Shop",    spaceType: "property",   district: "Arts District", price: 120, rent: 22,  rentScale: [22, 110, 330, 800, 975, 1150] },
 
   // === LEFT COLUMN (bottom to top, index 7-13) ===
-  { index: 7,  name: "Traffic Jam",          spaceType: "trafficJam", district: "",              price: 0,   rent: 0 },
+  { index: 7,  name: "Jail",                 spaceType: "jail",       district: "",              price: 0,   rent: 0 },
   { index: 8,  name: "Mural Alley Cafe",     spaceType: "property",   district: "Arts District", price: 140, rent: 26,  rentScale: [26, 130, 390, 900, 1100, 1300] },
   { index: 9,  name: "City Events",          spaceType: "tax",        district: "",              price: 0,   rent: 0 },
   { index: 10, name: "Luxury Tax",           spaceType: "tax",        district: "",              price: 0,   rent: 0 },
@@ -49,7 +49,7 @@ export const BOARD_SPACES: BoardSpaceConfig[] = [
   { index: 20, name: "Stock Exchange",       spaceType: "property",   district: "Financial",     price: 340, rent: 66,  rentScale: [66, 330, 960, 1900, 2100, 2300] },
 
   // === RIGHT COLUMN (top to bottom, index 21-27) ===
-  { index: 21, name: "Detour",               spaceType: "goDetour",   district: "",              price: 0,   rent: 0 },
+  { index: 21, name: "Go to Jail",           spaceType: "goToJail",   district: "",              price: 0,   rent: 0 },
   { index: 22, name: "Trade Tower",          spaceType: "property",   district: "Financial",     price: 360, rent: 70,  rentScale: [70, 350, 1000, 2000, 2200, 2400] },
   { index: 23, name: "Bank HQ",             spaceType: "property",   district: "Financial",     price: 380, rent: 74,  rentScale: [74, 370, 1050, 2100, 2300, 2550] },
   { index: 24, name: "Hilltop Estate",       spaceType: "property",   district: "Uptown",        price: 400, rent: 78,  rentScale: [78, 390, 1100, 2200, 2500, 2800] },
@@ -119,3 +119,8 @@ export const DISTRICT_PROPERTIES: Record<string, number[]> = {
 };
 
 export const MAX_HOUSES = 4;
+
+// Jail constants
+export const JAIL_FINE = 50;
+export const JAIL_SPACE_INDEX = 7;
+export const MAX_JAIL_TURNS = 3;

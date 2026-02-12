@@ -20,7 +20,7 @@ export class DrawnCard extends Schema {
 export class BoardSpace extends Schema {
   @type("uint8") index: number = 0;
   @type("string") name: string = "";
-  @type("string") spaceType: string = "property"; // property, tax, payday, trafficJam, detour, parking, goDetour, community, chance
+  @type("string") spaceType: string = "property"; // property, tax, payday, jail, parking, goToJail, community, chance
   @type("string") district: string = "";
   @type("uint16") price: number = 0;
   @type("uint16") rent: number = 0;
@@ -39,7 +39,9 @@ export class Player extends Schema {
   @type(["uint8"]) ownedProperties = new ArraySchema<number>();
   @type("boolean") isActive: boolean = true;
   @type("boolean") isBankrupt: boolean = false;
-  @type("boolean") skipNextTurn: boolean = false;
+  @type("boolean") inJail: boolean = false;
+  @type("uint8") jailTurnsRemaining: number = 0;
+  @type("uint8") jailFreeCards: number = 0;
   @type("uint8") playerIndex: number = 0;
   @type("string") pieceId: string = "car";
 }

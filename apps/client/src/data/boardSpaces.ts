@@ -55,8 +55,8 @@ export const DISTRICT_PROPERTIES: Record<string, number[]> = {
 // Space type icons/labels
 export const SPACE_TYPE_LABELS: Record<string, string> = {
   payday: "💰 Payday",
-  trafficJam: "🚗 Traffic Jam",
-  goDetour: "🔀 Detour",
+  jail: "🚓 Jail",
+  goToJail: "👮 Go to Jail",
   parking: "🅿️ City Parking",
   tax: "🏛️ Tax",
   community: "📦 Community Chest",

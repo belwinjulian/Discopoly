@@ -590,3 +590,59 @@
 .retry-btn:hover {
   background: rgba(255, 255, 255, 0.15);
 }
+
+/* ==================== Jail Controls ==================== */
+.controls-jail-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 70, 70, 0.08);
+  border: 1px solid rgba(255, 70, 70, 0.2);
+  border-radius: 8px;
+}
+
+.controls-jail-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #FF6B6B;
+  white-space: nowrap;
+}
+
+.controls-btn-jail-fine {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #1a1a2e;
+  font-size: 12px;
+}
+
+.controls-btn-jail-fine:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.controls-btn-jail-card {
+  background: linear-gradient(135deg, #4ECDC4, #45B7D1);
+  color: #1a1a2e;
+  font-size: 12px;
+}
+
+/* ==================== Jailed Player Token ==================== */
+.board-space-token-jailed {
+  border: 2px solid #FF6B6B !important;
+  animation: jailPulse 1.5s ease-in-out infinite;
+  position: relative;
+}
+
+.board-token-jail-icon {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 8px;
+  line-height: 1;
+}
+
+@keyframes jailPulse {
+  0%, 100% { border-color: #FF6B6B; }
+  50% { border-color: rgba(255, 107, 107, 0.3); }
+}
