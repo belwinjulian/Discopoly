@@ -1,0 +1,427 @@
+/* ==================== Trade Overlay ==================== */
+.trade-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: tradeFadeIn 0.2s ease-out;
+}
+
+.trade-modal {
+  background: #1e1e3a;
+  border-radius: 16px;
+  padding: 20px;
+  width: 92%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.5);
+  animation: tradeSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+}
+
+/* ==================== Trade Header ==================== */
+.trade-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.trade-title {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  flex: 1;
+}
+
+.trade-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #888;
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.trade-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+/* ==================== Trade Columns ==================== */
+.trade-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.trade-column {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trade-column-offer {
+  border-color: rgba(78, 205, 196, 0.2);
+}
+
+.trade-column-request {
+  border-color: rgba(255, 165, 0, 0.2);
+}
+
+.trade-column-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.trade-column-offer .trade-column-title {
+  color: #4ECDC4;
+}
+
+.trade-column-request .trade-column-title {
+  color: #FFA500;
+}
+
+/* ==================== Property Selection ==================== */
+.trade-props-label {
+  font-size: 11px;
+  color: #888;
+  font-weight: 500;
+}
+
+.trade-props-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.trade-prop-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #555;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 12px;
+  color: #ccc;
+}
+
+.trade-prop-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.trade-prop-chip-selected {
+  background: rgba(78, 205, 196, 0.1);
+  border-color: rgba(78, 205, 196, 0.3);
+}
+
+.trade-prop-chip-readonly {
+  cursor: default;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.trade-prop-name {
+  flex: 1;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trade-prop-price {
+  font-size: 10px;
+  color: #888;
+}
+
+.trade-prop-check {
+  font-size: 12px;
+  color: #4ECDC4;
+}
+
+.trade-no-props {
+  font-size: 11px;
+  color: #555;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+/* ==================== Coin Input ==================== */
+.trade-coins-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.trade-coins-label {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+}
+
+.trade-coins-input {
+  width: 80px;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #FFD700;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.trade-coins-input:focus {
+  border-color: rgba(255, 215, 0, 0.4);
+}
+
+.trade-coins-input::placeholder {
+  color: #555;
+  font-weight: 400;
+}
+
+.trade-coins-icon {
+  font-size: 14px;
+}
+
+.trade-coins-readonly {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FFD700;
+}
+
+/* ==================== Trade Actions ==================== */
+.trade-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.trade-btn {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 1;
+}
+
+.trade-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.trade-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.trade-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.trade-btn-send {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #1a1a2e;
+}
+
+.trade-btn-send:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+}
+
+.trade-btn-accept {
+  background: linear-gradient(135deg, #4ECDC4, #45B7D1);
+  color: #1a1a2e;
+}
+
+.trade-btn-accept:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(78, 205, 196, 0.3);
+}
+
+.trade-btn-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+}
+
+.trade-btn-cancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.trade-btn-decline {
+  background: rgba(255, 70, 70, 0.15);
+  color: #FF6B6B;
+  border: 1px solid rgba(255, 70, 70, 0.3);
+}
+
+.trade-btn-decline:hover:not(:disabled) {
+  background: rgba(255, 70, 70, 0.25);
+}
+
+/* ==================== Waiting State ==================== */
+.trade-waiting {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.trade-waiting-text {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+.trade-waiting-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.trade-waiting-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #FFD700;
+  animation: tradeDotPulse 1.2s infinite;
+}
+
+.trade-waiting-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.trade-waiting-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* ==================== Trade Summary (respond/waiting) ==================== */
+.trade-summary {
+  margin-bottom: 16px;
+}
+
+.trade-summary-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.trade-summary-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.trade-summary-gives .trade-summary-title {
+  color: #4ECDC4;
+}
+
+.trade-summary-wants .trade-summary-title {
+  color: #FFA500;
+}
+
+.trade-summary-items {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.trade-summary-item {
+  font-size: 12px;
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+}
+
+.trade-summary-item-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.trade-summary-coins {
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFD700;
+}
+
+.trade-summary-empty {
+  font-size: 11px;
+  color: #555;
+  font-style: italic;
+}
+
+/* ==================== Trade Button in Player Panel ==================== */
+.panel-trade-btn {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 4px;
+  background: rgba(255, 215, 0, 0.08);
+  color: #FFD700;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.panel-trade-btn:hover:not(:disabled) {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.panel-trade-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ==================== Animations ==================== */
+@keyframes tradeFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes tradeSlideUp {
+  from { transform: translateY(30px) scale(0.95); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes tradeDotPulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}

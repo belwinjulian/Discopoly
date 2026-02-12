@@ -1,0 +1,187 @@
+/* ==================== Card Modal Overlay ==================== */
+.card-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 80;
+  animation: cardOverlayIn 0.3s ease-out;
+}
+
+@keyframes cardOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ==================== Card Container ==================== */
+.card-modal {
+  width: 300px;
+  border-radius: 16px;
+  overflow: hidden;
+  animation: cardReveal 0.5s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 255, 255, 0.05);
+}
+
+@keyframes cardReveal {
+  0% {
+    transform: scale(0.3) rotateY(90deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05) rotateY(-5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+/* ==================== Community Card ==================== */
+.card-modal-community {
+  border: 3px solid #FFD700;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+}
+
+.card-modal-community .card-header {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #1a1a2e;
+}
+
+.card-modal-community .card-icon {
+  background: rgba(255, 215, 0, 0.15);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+/* ==================== Chance Card ==================== */
+.card-modal-chance {
+  border: 3px solid #9B59B6;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+}
+
+.card-modal-chance .card-header {
+  background: linear-gradient(135deg, #9B59B6, #8E44AD);
+  color: #fff;
+}
+
+.card-modal-chance .card-icon {
+  background: rgba(155, 89, 182, 0.15);
+  border: 2px solid rgba(155, 89, 182, 0.3);
+}
+
+/* ==================== Card Header ==================== */
+.card-header {
+  padding: 12px 16px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* ==================== Card Body ==================== */
+.card-body {
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.card-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  animation: cardIconPop 0.5s cubic-bezier(0.2, 0.8, 0.2, 1.3) 0.3s both;
+}
+
+@keyframes cardIconPop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin: 0;
+}
+
+.card-description {
+  font-size: 15px;
+  color: #ccc;
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.card-drawn-by {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  font-style: italic;
+}
+
+/* ==================== Card Footer ==================== */
+.card-footer {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.card-dismiss-btn {
+  padding: 10px 40px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.card-modal-community .card-dismiss-btn {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #1a1a2e;
+}
+
+.card-modal-community .card-dismiss-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.4);
+}
+
+.card-modal-chance .card-dismiss-btn {
+  background: linear-gradient(135deg, #9B59B6, #8E44AD);
+  color: #fff;
+}
+
+.card-modal-chance .card-dismiss-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(155, 89, 182, 0.4);
+}
+
+/* Waiting text (shown to other players) */
+.card-waiting {
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  padding: 12px 20px 16px;
+  animation: cardPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes cardPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}

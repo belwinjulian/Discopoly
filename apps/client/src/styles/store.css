@@ -1,0 +1,195 @@
+/* ==================== Store Overlay ==================== */
+.store-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: storeFadeIn 0.2s ease-out;
+}
+
+.store-modal {
+  background: #1e1e3a;
+  border-radius: 16px;
+  padding: 20px;
+  width: 90%;
+  max-width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.5);
+  animation: storeSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+}
+
+.store-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.store-title {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #9B59B6, #E74C3C);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  flex: 1;
+}
+
+.store-gems {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(155, 89, 182, 0.15);
+  border-radius: 8px;
+  border: 1px solid rgba(155, 89, 182, 0.3);
+}
+
+.store-gems-icon {
+  font-size: 16px;
+}
+
+.store-gems-count {
+  font-size: 16px;
+  font-weight: 700;
+  color: #BB86FC;
+}
+
+.store-gems-label {
+  font-size: 11px;
+  color: #888;
+}
+
+.store-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #888;
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.store-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.store-error {
+  padding: 8px 12px;
+  background: rgba(255, 70, 70, 0.15);
+  border: 1px solid rgba(255, 70, 70, 0.3);
+  border-radius: 8px;
+  color: #FF6B6B;
+  font-size: 13px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+/* ==================== Store Grid ==================== */
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.store-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.store-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.store-item-owned {
+  border-color: rgba(78, 205, 196, 0.3);
+  background: rgba(78, 205, 196, 0.06);
+}
+
+.store-item-locked {
+  opacity: 0.5;
+}
+
+.store-item-emoji {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.store-item-name {
+  font-size: 10px;
+  color: #aaa;
+  font-weight: 500;
+  text-align: center;
+}
+
+.store-item-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(78, 205, 196, 0.2);
+  color: #4ECDC4;
+  text-transform: uppercase;
+}
+
+.store-item-buy {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #9B59B6, #8E44AD);
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.store-item-buy:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(155, 89, 182, 0.4);
+}
+
+.store-item-buy:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.store-hint {
+  text-align: center;
+  font-size: 11px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* ==================== Animations ==================== */
+@keyframes storeFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes storeSlideUp {
+  from { transform: translateY(30px) scale(0.95); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}

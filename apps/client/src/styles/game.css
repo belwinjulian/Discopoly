@@ -1,0 +1,592 @@
+/* ==================== Game Layout ==================== */
+.game-layout {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.game-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.game-sidebar {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-y: auto;
+}
+
+/* ==================== Dice ==================== */
+.dice-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.dice {
+  font-size: 24px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  animation: diceAppear 0.3s ease-out;
+}
+
+.dice-total {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFD700;
+  background: rgba(255, 215, 0, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+@keyframes diceAppear {
+  0% {
+    transform: scale(0.5) rotate(-180deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* ==================== Game Controls ==================== */
+.game-controls {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.controls-turn-indicator {
+  text-align: center;
+}
+
+.controls-your-turn {
+  font-size: 15px;
+  font-weight: 700;
+  color: #4ECDC4;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.controls-waiting {
+  font-size: 14px;
+  color: #888;
+}
+
+.controls-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  flex: 1;
+}
+
+.controls-btn {
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.controls-btn:hover {
+  transform: translateY(-1px);
+}
+
+.controls-btn:active {
+  transform: translateY(0);
+}
+
+.controls-btn-roll {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #1a1a2e;
+  font-size: 15px;
+}
+
+.controls-btn-roll:hover {
+  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+}
+
+.controls-btn-buy {
+  background: linear-gradient(135deg, #4ECDC4, #45B7D1);
+  color: #1a1a2e;
+  flex: 1;
+}
+
+.controls-btn-skip {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+  flex: 1;
+}
+
+.controls-btn-skip:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.controls-btn-end {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+}
+
+.controls-btn-end:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.controls-buy-prompt {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+}
+
+.controls-buy-text {
+  font-size: 13px;
+  color: #ccc;
+  text-align: center;
+}
+
+.controls-buy-buttons {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+/* ==================== Player Panel ==================== */
+.player-panel {
+  padding: 12px;
+  flex: 1;
+}
+
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.panel-player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.panel-player {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.2s;
+}
+
+.panel-player-current {
+  border-color: rgba(78, 205, 196, 0.3);
+  background: rgba(78, 205, 196, 0.06);
+}
+
+.panel-player-me {
+  border-color: rgba(255, 215, 0, 0.2);
+}
+
+.panel-player-bankrupt {
+  opacity: 0.4;
+}
+
+.panel-player-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-player-token {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a1a2e;
+  flex-shrink: 0;
+}
+
+.panel-token-emoji {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.panel-player-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.panel-player-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e0e0e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.panel-me-tag {
+  font-weight: 400;
+  color: #888;
+  font-size: 11px;
+}
+
+.panel-player-coins {
+  font-size: 11px;
+  color: #FFD700;
+  font-weight: 500;
+}
+
+.panel-turn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ECDC4;
+  flex-shrink: 0;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.panel-player-properties {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.panel-property-chip {
+  padding: 2px 6px;
+  border-left: 3px solid #555;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.panel-property-name {
+  font-size: 10px;
+  color: #aaa;
+}
+
+.panel-property-building {
+  font-size: 9px;
+  line-height: 1;
+  margin-left: auto;
+}
+
+/* ==================== Post-Roll Actions ==================== */
+.controls-post-roll {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.controls-btn-build {
+  background: linear-gradient(135deg, #2ECC71, #27AE60);
+  color: #fff;
+}
+
+.controls-btn-build:hover {
+  box-shadow: 0 4px 16px rgba(46, 204, 113, 0.3);
+}
+
+/* ==================== Build Panel ==================== */
+.controls-build-panel {
+  width: 100%;
+  padding: 8px;
+  background: rgba(46, 204, 113, 0.06);
+  border: 1px solid rgba(46, 204, 113, 0.2);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.build-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.build-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.build-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-left: 3px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #e0e0e0;
+  font-size: 11px;
+}
+
+.build-option-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.build-option-hotel {
+  border-left-width: 3px;
+}
+
+.build-option-name {
+  font-weight: 600;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.build-option-houses {
+  font-size: 10px;
+}
+
+.build-option-cost {
+  font-size: 10px;
+  color: #FFD700;
+  font-weight: 600;
+}
+
+/* ==================== Controls Bar (wraps GameControls + Quit) ==================== */
+.controls-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.controls-bar .game-controls {
+  flex: 1;
+}
+
+.controls-btn-quit {
+  background: rgba(255, 70, 70, 0.12);
+  color: #FF6B6B;
+  border: 1px solid rgba(255, 70, 70, 0.2);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.controls-btn-quit:hover {
+  background: rgba(255, 70, 70, 0.25);
+  border-color: rgba(255, 70, 70, 0.4);
+}
+
+/* ==================== Quit Confirmation Modal ==================== */
+.quit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 90;
+  animation: quitFadeIn 0.2s ease-out;
+}
+
+@keyframes quitFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.quit-modal {
+  background: #1a1a2e;
+  border: 1px solid rgba(255, 70, 70, 0.3);
+  border-radius: 16px;
+  padding: 24px 28px;
+  max-width: 340px;
+  width: 90%;
+  text-align: center;
+  animation: quitSlideIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes quitSlideIn {
+  from { transform: scale(0.9) translateY(10px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.quit-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #FF6B6B;
+  margin: 0 0 8px;
+}
+
+.quit-text {
+  font-size: 14px;
+  color: #aaa;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+.quit-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.quit-btn {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.quit-btn-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+}
+
+.quit-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.quit-btn-confirm {
+  background: linear-gradient(135deg, #FF6B6B, #e74c3c);
+  color: #fff;
+}
+
+.quit-btn-confirm:hover {
+  box-shadow: 0 4px 16px rgba(255, 70, 70, 0.4);
+  transform: translateY(-1px);
+}
+
+/* ==================== Error Toast ==================== */
+.error-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 70, 70, 0.95);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideDown 0.3s ease-out;
+  box-shadow: 0 4px 16px rgba(255, 70, 70, 0.3);
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateX(-50%) translateY(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ==================== Loading & Error Screens ==================== */
+.loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 16px;
+  color: #888;
+  font-size: 15px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #4ECDC4;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-text {
+  color: #FF6B6B;
+}
+
+.retry-btn {
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.retry-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}

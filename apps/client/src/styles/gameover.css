@@ -1,0 +1,125 @@
+.gameover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  gap: 24px;
+}
+
+.gameover-header {
+  text-align: center;
+}
+
+.gameover-title {
+  font-size: 48px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+}
+
+.gameover-winner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.gameover-winner-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a1a2e;
+  box-shadow: 0 4px 24px rgba(255, 215, 0, 0.3);
+  border: 3px solid #FFD700;
+}
+
+.gameover-winner-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.gameover-standings {
+  width: 100%;
+  max-width: 400px;
+}
+
+.gameover-standings h2 {
+  font-size: 14px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.gameover-standings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gameover-standing-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gameover-standing-me {
+  border-color: rgba(78, 205, 196, 0.3);
+  background: rgba(78, 205, 196, 0.06);
+}
+
+.gameover-rank {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFD700;
+  width: 30px;
+}
+
+.gameover-standing-token {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a1a2e;
+  flex-shrink: 0;
+}
+
+.gameover-standing-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e0e0e0;
+}
+
+.gameover-standing-wealth {
+  font-size: 13px;
+  color: #FFD700;
+  font-weight: 600;
+}
+
+.gameover-last-action {
+  font-size: 13px;
+  color: #888;
+  text-align: center;
+  max-width: 400px;
+}

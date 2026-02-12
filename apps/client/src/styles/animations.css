@@ -1,0 +1,336 @@
+/* ==================== YOUR TURN Splash ==================== */
+.turn-splash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  animation: splashFadeIn 0.2s ease-out, splashFadeOut 0.4s ease-in 1.6s forwards;
+  pointer-events: none;
+}
+
+.turn-splash {
+  text-align: center;
+  animation: splashZoomIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+}
+
+.turn-splash-emoji {
+  font-size: 56px;
+  animation: splashBounce 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.4);
+  margin-bottom: 8px;
+}
+
+.turn-splash-title {
+  font-size: 48px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, #FFD700, #FF6B6B, #4ECDC4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  animation: splashGlow 1s ease-in-out infinite alternate;
+}
+
+.turn-splash-other {
+  font-size: 32px;
+  background: linear-gradient(135deg, #888, #aaa);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.turn-splash-sub {
+  font-size: 18px;
+  color: #ccc;
+  margin-top: 4px;
+  animation: splashSlideUp 0.5s ease-out 0.2s both;
+}
+
+@keyframes splashFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes splashFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes splashZoomIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes splashBounce {
+  0% { transform: scale(0) rotate(-20deg); }
+  50% { transform: scale(1.3) rotate(10deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes splashGlow {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.3); }
+}
+
+@keyframes splashSlideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ==================== Dice Rolling Animation ==================== */
+.dice-rolling {
+  animation: diceShake 0.1s linear infinite;
+}
+
+.dice-result {
+  animation: diceSlam 0.4s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+}
+
+@keyframes diceShake {
+  0% { transform: rotate(0deg) scale(1.1); }
+  25% { transform: rotate(-15deg) scale(1.15); }
+  50% { transform: rotate(15deg) scale(1.1); }
+  75% { transform: rotate(-10deg) scale(1.15); }
+  100% { transform: rotate(0deg) scale(1.1); }
+}
+
+@keyframes diceSlam {
+  0% { transform: scale(2) rotate(180deg); opacity: 0; }
+  60% { transform: scale(0.9) rotate(-5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* ==================== Game Event Notifications ==================== */
+.game-event {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  z-index: 50;
+  animation: eventPopIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1.2),
+             eventPopOut 0.3s ease-in 2.2s forwards;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.game-event-icon {
+  font-size: 22px;
+}
+
+.game-event-info {
+  background: rgba(30, 30, 60, 0.95);
+  color: #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.game-event-buy {
+  background: rgba(20, 60, 60, 0.95);
+  color: #4ECDC4;
+  border: 1px solid rgba(78, 205, 196, 0.3);
+  box-shadow: 0 8px 32px rgba(78, 205, 196, 0.2);
+}
+
+.game-event-build {
+  background: rgba(20, 50, 30, 0.95);
+  color: #2ECC71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  box-shadow: 0 8px 32px rgba(46, 204, 113, 0.2);
+}
+
+.game-event-rent {
+  background: rgba(60, 20, 20, 0.95);
+  color: #FF6B6B;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  box-shadow: 0 8px 32px rgba(255, 107, 107, 0.2);
+}
+
+.game-event-tax {
+  background: rgba(50, 40, 20, 0.95);
+  color: #FFA500;
+  border: 1px solid rgba(255, 165, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(255, 165, 0, 0.2);
+}
+
+.game-event-payday {
+  background: rgba(40, 50, 20, 0.95);
+  color: #FFD700;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(255, 215, 0, 0.2);
+}
+
+.game-event-bankrupt {
+  background: rgba(60, 10, 10, 0.95);
+  color: #FF4444;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  box-shadow: 0 8px 32px rgba(255, 68, 68, 0.2);
+}
+
+.game-event-card {
+  background: rgba(40, 20, 60, 0.95);
+  color: #BB86FC;
+  border: 1px solid rgba(187, 134, 252, 0.3);
+  box-shadow: 0 8px 32px rgba(187, 134, 252, 0.2);
+}
+
+@keyframes eventPopIn {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+@keyframes eventPopOut {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -60%) scale(0.8); opacity: 0; }
+}
+
+/* ==================== Roll Dice Button Pulse ==================== */
+.controls-btn-roll {
+  animation: rollPulse 1.5s ease-in-out infinite;
+}
+
+.controls-btn-roll:hover {
+  animation: none;
+}
+
+@keyframes rollPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+  50% { box-shadow: 0 0 20px 6px rgba(255, 215, 0, 0.2); }
+}
+
+/* ==================== Coin Change Flash ==================== */
+.coin-change-positive {
+  animation: coinFlashGreen 0.6s ease-out;
+}
+
+.coin-change-negative {
+  animation: coinFlashRed 0.6s ease-out;
+}
+
+@keyframes coinFlashGreen {
+  0% { color: #4ECDC4; transform: scale(1.3); }
+  100% { color: #FFD700; transform: scale(1); }
+}
+
+@keyframes coinFlashRed {
+  0% { color: #FF4444; transform: scale(1.3); }
+  100% { color: #FFD700; transform: scale(1); }
+}
+
+/* ==================== Board Space Highlight ==================== */
+.board-space-active {
+  animation: spaceGlow 1s ease-in-out infinite alternate;
+}
+
+@keyframes spaceGlow {
+  from { box-shadow: inset 0 0 8px rgba(78, 205, 196, 0.3); }
+  to { box-shadow: inset 0 0 16px rgba(78, 205, 196, 0.6); }
+}
+
+/* ==================== Player Token Bounce on Move ==================== */
+.board-space-token-moved {
+  animation: tokenBounce 0.5s cubic-bezier(0.2, 0.8, 0.2, 1.3);
+}
+
+@keyframes tokenBounce {
+  0% { transform: scale(0) translateY(-10px); }
+  60% { transform: scale(1.3) translateY(2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* ==================== Cinematic Piece Movement ==================== */
+
+/* Animated piece overlay - positioned absolutely inside .board */
+.anim-piece {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  pointer-events: none;
+  /* Center the piece on the coordinate */
+  transform: translate(-50%, -50%) scale(1.8);
+  /* Smooth transition between positions */
+  transition: left 160ms cubic-bezier(0.25, 0.1, 0.25, 1),
+              top 160ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  filter: brightness(1.2);
+}
+
+.anim-piece-emoji {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Hop animation - subtle vertical arc on each step */
+.anim-piece-hop {
+  animation: pieceHopArc 160ms cubic-bezier(0.33, 0, 0.67, 1);
+}
+
+/* Landing animation - slam down with scale pulse */
+.anim-piece-land {
+  animation: pieceLand 300ms cubic-bezier(0.2, 0.8, 0.2, 1.2);
+}
+
+@keyframes pieceHopArc {
+  0% {
+    transform: translate(-50%, -50%) scale(1.8) translateY(0);
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1.9) translateY(-14px);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.8) translateY(0);
+  }
+}
+
+@keyframes pieceLand {
+  0% {
+    transform: translate(-50%, -50%) scale(1.9) translateY(-10px);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(2.2) translateY(0);
+    filter: brightness(1.6);
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.6) translateY(2px);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.8) translateY(0);
+    filter: brightness(1.2);
+  }
+}
+
+/* Board blur effect during animation */
+.board-animating .board-space-content,
+.board-animating .board-space-stripe,
+.board-animating .board-space-buildings {
+  filter: blur(0.5px);
+  transition: filter 0.2s ease;
+}
+
+.board-animating .board-center {
+  filter: blur(1.5px);
+  transition: filter 0.2s ease;
+}
+
+/* Highlight the space the piece is currently on during animation */
+.board-animating .board-space-anim-highlight {
+  background: rgba(255, 255, 255, 0.12);
+}

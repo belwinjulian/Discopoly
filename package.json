@@ -1,0 +1,18 @@
+{
+  "name": "discopoly",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Discord Activity board game - Monopoly-inspired city building game",
+  "workspaces": [
+    "apps/client",
+    "apps/server"
+  ],
+  "scripts": {
+    "start:client": "npm run dev --workspace=apps/client",
+    "start:server": "npm run dev --workspace=apps/server",
+    "build:client": "npm run build --workspace=apps/client",
+    "build:server": "npm run build --workspace=apps/server",
+    "build": "npm run build:server && npm run build:client",
+    "cloudflared": "cloudflared tunnel --url http://localhost:5173"
+  }
+}
