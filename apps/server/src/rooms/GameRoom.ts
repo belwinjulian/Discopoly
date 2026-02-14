@@ -48,7 +48,7 @@ import { processGoalTrigger, type GoalCompletionResult } from "../goals.js";
 import { DISTRICT_PROPERTIES } from "../logic/boardConfig.js";
 
 const MAX_PLAYERS = 6;
-const MIN_PLAYERS = 1; // TODO: change back to 2 for production
+const MIN_PLAYERS = 2;
 const DEFAULT_TURN_TIME_LIMIT = 60; // seconds
 const TIME_EXTENSION_SECONDS = 30;
 

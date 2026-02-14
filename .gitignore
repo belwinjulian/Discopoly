@@ -26,5 +26,9 @@ build/
 .DS_Store
 Thumbs.db
 
+# SQLite database files
+*.db-shm
+*.db-wal
+
 # Discord Activity specific
 .discord/

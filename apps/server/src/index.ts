@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { Server } from "colyseus";
 import { GameRoom } from "./rooms/GameRoom.js";
 import { getPlayer, buyPiece, buyCosmetic, equipCosmetic, getPlayerStats, getPlayerAchievements } from "./db.js";
