@@ -1,0 +1,328 @@
+/* Auction Modal Styles - Compact version */
+
+.auction-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.auction-modal {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 215, 0, 0.2);
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.auction-header {
+  padding: 10px 16px;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 2px;
+}
+
+/* Property Info */
+.auction-property {
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.auction-property-name {
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+  color: #fff;
+  text-align: center;
+}
+
+.auction-property-details {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.auction-property-district {
+  text-transform: capitalize;
+}
+
+/* Current Bid Display */
+.auction-bid-display {
+  padding: 10px 16px;
+  text-align: center;
+  background: rgba(255, 215, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.auction-bid-label {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.auction-bid-amount {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffd700;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.auction-bid-leader {
+  font-size: 0.8rem;
+  color: #4ade80;
+  margin-top: 2px;
+}
+
+/* Player List */
+.auction-players {
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.auction-players-title {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.auction-players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.auction-player {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.auction-player.me {
+  background: rgba(100, 149, 237, 0.2);
+  border: 1px solid rgba(100, 149, 237, 0.4);
+}
+
+.auction-player-name {
+  color: #fff;
+}
+
+.auction-player-status {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.auction-player-status.leading {
+  background: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
+}
+
+.auction-player-status.passed {
+  background: rgba(255, 99, 71, 0.2);
+  color: #ff6347;
+}
+
+.auction-player-status.bidding {
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+}
+
+/* Controls */
+.auction-controls {
+  padding: 10px 16px;
+}
+
+.auction-your-coins {
+  text-align: center;
+  color: #888;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+}
+
+.auction-your-coins strong {
+  color: #ffd700;
+}
+
+.auction-bid-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.auction-bid-input {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 6px;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.auction-bid-input:focus {
+  border-color: rgba(255, 215, 0, 0.6);
+}
+
+.auction-bid-min {
+  color: #666;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.auction-quick-bids {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.auction-quick-btn {
+  flex: 1;
+  padding: 6px 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auction-quick-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.auction-quick-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.auction-action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.auction-btn {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auction-btn-bid {
+  background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+  color: #000;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.auction-btn-bid:hover:not(:disabled) {
+  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.4);
+}
+
+.auction-btn-bid:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auction-btn-pass {
+  background: linear-gradient(135deg, #444 0%, #333 100%);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.auction-btn-pass:hover {
+  background: linear-gradient(135deg, #555 0%, #444 100%);
+}
+
+/* Leading message */
+.auction-leading-message {
+  text-align: center;
+  padding: 12px;
+  background: rgba(74, 222, 128, 0.1);
+  border-radius: 6px;
+  color: #4ade80;
+  font-size: 0.85rem;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+/* Passed message */
+.auction-passed-message {
+  padding: 16px;
+  text-align: center;
+  color: #888;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Can't afford message */
+.auction-cant-afford {
+  padding: 12px 16px;
+  text-align: center;
+  color: #ff6347;
+  font-size: 0.85rem;
+}
+
+.auction-cant-afford .auction-btn-pass {
+  margin-top: 10px;
+  width: 100%;
+}
+
+/* Scrollbar for player list */
+.auction-players-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.auction-players-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.auction-players-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}

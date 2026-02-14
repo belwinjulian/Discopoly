@@ -1,0 +1,229 @@
+/* ==================== Rent Preview Tooltip ==================== */
+.rent-preview {
+  position: fixed;
+  z-index: 100;
+  width: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 255, 255, 0.03);
+  pointer-events: none;
+  animation: rentPreviewFadeIn 0.15s ease-out;
+  opacity: 1;
+}
+
+@keyframes rentPreviewFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== District Color Header ==================== */
+.rent-preview-header {
+  padding: 8px 12px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ==================== Property Name ==================== */
+.rent-preview-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin: 0;
+  padding: 8px 12px 4px;
+}
+
+/* ==================== Mortgage Badge ==================== */
+.rent-preview-mortgage-badge {
+  background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  padding: 4px 12px;
+  margin: 4px auto 0;
+  border-radius: 3px;
+  text-align: center;
+  width: fit-content;
+}
+
+.rent-preview-mortgage-note {
+  font-size: 10px;
+  color: #dc3545;
+  text-align: center;
+  padding: 2px 12px 6px;
+  font-style: italic;
+}
+
+/* ==================== Monopoly Badge ==================== */
+.rent-preview-monopoly-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  margin: 2px auto 0;
+  border-radius: 3px;
+  text-align: center;
+  width: fit-content;
+  background: rgba(255, 215, 0, 0.15);
+  color: #FFD700;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+/* ==================== Info Rows ==================== */
+.rent-preview-details {
+  padding: 4px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rent-preview-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #ccc;
+  padding: 1px 0;
+}
+
+.rent-preview-row .rp-label {
+  color: #888;
+}
+
+.rent-preview-row .rp-value {
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.rent-preview-row .rp-value-unowned {
+  color: #666;
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ==================== Section Divider ==================== */
+.rent-preview-section {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #555;
+  text-align: center;
+  margin: 6px 12px 3px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ==================== Rent Scale Table ==================== */
+.rent-preview-rent-table {
+  padding: 0 12px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.rent-preview-rent-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #777;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.1s;
+}
+
+.rent-preview-rent-row.rp-current {
+  background: rgba(78, 205, 196, 0.12);
+  color: #fff;
+  font-weight: 600;
+}
+
+.rent-preview-rent-row.rp-current .rp-rent-value {
+  color: #4ECDC4;
+}
+
+.rent-preview-rent-row.rp-monopoly-base {
+  background: rgba(255, 215, 0, 0.08);
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+.rent-preview-rent-row.rp-monopoly-base .rp-rent-value {
+  color: #FFD700;
+}
+
+.rent-preview-rent-row .rp-rent-label {
+  flex: 1;
+}
+
+.rent-preview-rent-row .rp-rent-value {
+  min-width: 50px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.rent-preview-rent-row .rp-rent-indicator {
+  width: 14px;
+  text-align: center;
+  font-size: 9px;
+  color: #4ECDC4;
+}
+
+/* Mortgaged rent table */
+.rent-preview-rent-table.rp-mortgaged {
+  opacity: 0.4;
+}
+
+.rent-preview-rent-table.rp-mortgaged .rent-preview-rent-row {
+  text-decoration: line-through;
+}
+
+/* ==================== Build Costs ==================== */
+.rent-preview-build-costs {
+  padding: 0 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rent-preview-build-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #777;
+  padding: 1px 0;
+}
+
+.rent-preview-build-row .rp-build-value {
+  color: #aaa;
+  font-weight: 500;
+}
+
+/* ==================== Touch Overlay ==================== */
+.rent-preview-touch-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+  background: transparent;
+}

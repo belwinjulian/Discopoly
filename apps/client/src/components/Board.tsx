@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { BoardSpaceState, PlayerState } from "../hooks/useGameState";
 import { BoardSpaceComponent } from "./BoardSpace";
 import { AnimatedPiece } from "./AnimatedPiece";
@@ -23,6 +23,8 @@ interface BoardProps {
   animPlayerIndex?: number;
   /** Whether the animation is on its final step */
   isAnimFinal?: boolean;
+  /** Callback when a property space is clicked */
+  onSpaceClick?: (spaceIndex: number) => void;
 }
 
 export const Board: React.FC<BoardProps> = ({
@@ -36,8 +38,18 @@ export const Board: React.FC<BoardProps> = ({
   animPieceId,
   animPlayerIndex,
   isAnimFinal = false,
+  onSpaceClick,
 }) => {
   const layout = getBoardLayout();
+
+  // Build a Map<string, PlayerState> from the players array for rent preview
+  const playersMap = useMemo(() => {
+    const map = new Map<string, PlayerState>();
+    for (const p of players) {
+      map.set(p.sessionId, p);
+    }
+    return map;
+  }, [players]);
 
   if (boardSpaces.length === 0) return null;
 
@@ -71,9 +83,12 @@ export const Board: React.FC<BoardProps> = ({
               key={idx}
               space={boardSpaces[idx]}
               players={players}
+              allBoardSpaces={boardSpaces}
+              allPlayers={playersMap}
               isCorner={corners.includes(idx)}
               side="top"
               hideTokenForSession={hideSession}
+              onClick={onSpaceClick}
             />
           ))}
         </div>
@@ -87,9 +102,12 @@ export const Board: React.FC<BoardProps> = ({
                 key={idx}
                 space={boardSpaces[idx]}
                 players={players}
+                allBoardSpaces={boardSpaces}
+                allPlayers={playersMap}
                 isCorner={corners.includes(idx)}
                 side="left"
                 hideTokenForSession={hideSession}
+                onClick={onSpaceClick}
               />
             ))}
           </div>
@@ -114,9 +132,12 @@ export const Board: React.FC<BoardProps> = ({
                 key={idx}
                 space={boardSpaces[idx]}
                 players={players}
+                allBoardSpaces={boardSpaces}
+                allPlayers={playersMap}
                 isCorner={corners.includes(idx)}
                 side="right"
                 hideTokenForSession={hideSession}
+                onClick={onSpaceClick}
               />
             ))}
           </div>
@@ -129,9 +150,12 @@ export const Board: React.FC<BoardProps> = ({
               key={idx}
               space={boardSpaces[idx]}
               players={players}
+              allBoardSpaces={boardSpaces}
+              allPlayers={playersMap}
               isCorner={corners.includes(idx)}
               side="bottom"
               hideTokenForSession={hideSession}
+              onClick={onSpaceClick}
             />
           ))}
         </div>

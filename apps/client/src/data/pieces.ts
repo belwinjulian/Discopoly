@@ -22,6 +22,10 @@ export const PIECES: PieceDefinition[] = [
   { id: "alien", emoji: "👽", name: "Alien", cost: 30 },
   { id: "robot", emoji: "🤖", name: "Robot", cost: 45 },
   { id: "phoenix", emoji: "🦅", name: "Phoenix", cost: 60 },
+  { id: "shark", emoji: "🦈", name: "Shark", cost: 75 },
+  { id: "wizard", emoji: "🧙", name: "Wizard", cost: 80 },
+  { id: "dino", emoji: "🦖", name: "T-Rex", cost: 100 },
+  { id: "penguin", emoji: "🐧", name: "Penguin", cost: 50 },
 ];
 
 export const PIECES_MAP = new Map(PIECES.map((p) => [p.id, p]));

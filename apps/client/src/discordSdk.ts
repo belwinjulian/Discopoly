@@ -16,6 +16,7 @@ export interface DiscordUser {
 let currentUser: DiscordUser | null = null;
 let accessToken: string | null = null;
 let authCode: string | null = null;
+let channelId: string | null = null;
 
 /**
  * Initialize the Discord Embedded App SDK.
@@ -56,7 +57,8 @@ async function doInitDiscordSdk(): Promise<DiscordUser | null> {
       ),
     ]);
     isReady = true;
-    console.log("[Discord] SDK ready!");
+    channelId = discordSdk.channelId;
+    console.log("[Discord] SDK ready! channelId:", channelId);
 
     // Authorize with Discord
     console.log("[Discord] Requesting authorization...");
@@ -199,6 +201,14 @@ export function getAccessToken(): string | null {
  */
 export function getAuthCode(): string | null {
   return authCode;
+}
+
+/**
+ * Get the channel ID for the current Discord voice channel.
+ * Used to scope Colyseus rooms to specific voice channels.
+ */
+export function getChannelId(): string | null {
+  return channelId;
 }
 
 /**

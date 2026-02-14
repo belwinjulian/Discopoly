@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Room } from "@colyseus/sdk";
-import { initDiscordSdk, getAvatarUrl, getAccessToken, DiscordUser } from "./discordSdk";
+import { initDiscordSdk, getAvatarUrl, getAccessToken, getChannelId, DiscordUser } from "./discordSdk";
 import { joinOrCreateGame } from "./colyseus";
 import { useGameState, PlayerState, PlayerStoreData, BoardSpaceState } from "./hooks/useGameState";
 import { usePieceAnimation } from "./hooks/usePieceAnimation";
@@ -14,16 +14,33 @@ import { TurnSplash } from "./components/TurnSplash";
 import { GameEvent } from "./components/GameEvent";
 import { TradeModal } from "./components/TradeModal";
 import { CardModal } from "./components/CardModal";
+import { PropertyInfoModal } from "./components/PropertyInfoModal";
+import { AuctionModal } from "./components/AuctionModal";
+import { BankruptcyModal } from "./components/BankruptcyModal";
+import { GameLog } from "./components/GameLog";
+import { AchievementToast } from "./components/AchievementToast";
+import { TurnTimer } from "./components/TurnTimer";
 import { DISTRICT_PROPERTIES, HOUSE_COST, HOTEL_COST } from "./data/boardSpaces";
 import "./styles/game.css";
+import "./styles/auction.css";
 import "./styles/gameover.css";
 import "./styles/animations.css";
+import "./styles/gamelog.css";
+import "./styles/goals.css";
+import "./styles/achievements.css";
+import "./styles/turntimer.css";
+import "./styles/bankruptcy.css";
 
 /** Check if player can build anything (used for auto-end decision) */
 function canPlayerBuild(boardSpaces: BoardSpaceState[], sessionId: string, coins: number): boolean {
   for (const [district, indices] of Object.entries(DISTRICT_PROPERTIES)) {
     const ownsAll = indices.every((idx) => boardSpaces[idx]?.ownerId === sessionId);
     if (!ownsAll) continue;
+
+    // Can't build if any property in the district is mortgaged
+    const anyMortgaged = indices.some((idx) => boardSpaces[idx]?.isMortgaged);
+    if (anyMortgaged) continue;
+
     const houseCost = HOUSE_COST[district] || 100;
     const hotelCost = HOTEL_COST[district] || 100;
     // Can build a house?
@@ -54,7 +71,12 @@ function detectEventType(msg: string): "buy" | "rent" | "tax" | "payday" | "bank
   if (msg.includes("drew \"")) return "card";
   if (msg.includes("completed a trade")) return "trade";
   if (msg.includes("built a house") || msg.includes("built a HOTEL")) return "build";
+  if (msg.includes("sold a house") || msg.includes("sold the hotel")) return "build";
   if (msg.includes("bought") || msg.includes("purchased")) return "buy";
+  if (msg.includes("won") && msg.includes("for") && msg.includes("coins")) return "buy"; // Auction win
+  if (msg.includes("mortgaged") || msg.includes("unmortgaged")) return "buy";
+  if (msg.includes("bid") && msg.includes("coins")) return "info"; // Auction bid
+  if (msg.includes("auction") || msg.includes("Auction")) return "info"; // Auction events
   if (msg.includes("rent") || msg.includes("paid")) return "rent";
   if (msg.includes("tax") || msg.includes("Tax")) return "tax";
   if (msg.includes("Payday") || msg.includes("payday") || msg.includes("collected")) return "payday";
@@ -80,8 +102,13 @@ export const App: React.FC = () => {
   const prevTurnRef = useRef<number>(-1);
   const prevActionRef = useRef<string>("");
   const autoEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingEventRef = useRef<{ message: string; type: string } | null>(null);
+  const prevAnimatingRef = useRef(false);
 
-  const { gameState, error, sendMessage, playerStoreData, setPlayerStoreData } = useGameState(room);
+  const {
+    gameState, error, sendMessage, playerStoreData, setPlayerStoreData,
+    achievementNotifications, goalNotifications, dismissAchievement, dismissGoal,
+  } = useGameState(room);
 
   // Board ref for piece animation position calculations
   const boardRef = useRef<HTMLDivElement | null>(null);
@@ -115,6 +142,7 @@ export const App: React.FC = () => {
           displayName,
           avatarUrl,
           accessToken: getAccessToken() || undefined,
+          channelId: getChannelId() || undefined,
         });
 
         if (!mounted) return;
@@ -170,29 +198,56 @@ export const App: React.FC = () => {
     prevTurnRef.current = turnIndex;
   }, [gameState?.currentPlayerIndex, gameState?.phase]);
 
-  // Detect action changes → show event animation
+  // Detect action changes → show event animation (deferred if piece is animating)
+  // Uses isAnimatingRef (synchronous) instead of isAnimating (state) because
+  // both lastAction and position change in the same render, and the animation
+  // hook's setAnimState hasn't committed yet when this effect runs.
   useEffect(() => {
     if (!gameState || !gameState.lastAction) return;
     if (gameState.lastAction !== prevActionRef.current && gameState.lastAction !== "") {
       const action = gameState.lastAction;
       // Don't show event for turn start / generic messages
       if (!action.includes("joined") && !action.includes("started") && !action.includes("'s turn")) {
-        setEventType(detectEventType(action));
-        setEventMessage(action);
-        setEventKey((k) => k + 1);
+        const type = detectEventType(action);
+        if (pieceAnim.isAnimatingRef.current) {
+          // Queue event until piece lands
+          pendingEventRef.current = { message: action, type };
+        } else {
+          setEventType(type as typeof eventType);
+          setEventMessage(action);
+          setEventKey((k) => k + 1);
+        }
       }
       prevActionRef.current = action;
     }
   }, [gameState?.lastAction]);
+
+  // Flush pending event when piece animation ends
+  useEffect(() => {
+    if (prevAnimatingRef.current && !pieceAnim.isAnimating) {
+      const pending = pendingEventRef.current;
+      if (pending) {
+        setEventType(pending.type as typeof eventType);
+        setEventMessage(pending.message);
+        setEventKey((k) => k + 1);
+        pendingEventRef.current = null;
+      }
+    }
+    prevAnimatingRef.current = pieceAnim.isAnimating;
+  }, [pieceAnim.isAnimating]);
 
   // Auto-end turn after rolling (when no buy prompt AND no build options)
   // Delays until piece animation finishes
   useEffect(() => {
     if (!gameState || gameState.phase !== "playing") return;
 
-    // Don't auto-end while piece animation is running or a card is being displayed
+    // Don't auto-end while piece animation is running, a card is displayed,
+    // an auction is active, a trade is pending, or bankruptcy negotiation is active
     if (pieceAnim.isAnimating) return;
     if (gameState.drawnCard.deck !== "") return;
+    if (gameState.activeAuction.status === "active") return;
+    if (gameState.activeTrade.status === "pending") return;
+    if (gameState.bankruptcyNegotiation.status === "active") return;
 
     const activePlayers = Array.from(gameState.players.values())
       .filter((p) => p.isActive && !p.isBankrupt)
@@ -219,7 +274,7 @@ export const App: React.FC = () => {
     return () => {
       if (autoEndTimerRef.current) clearTimeout(autoEndTimerRef.current);
     };
-  }, [gameState?.hasRolled, gameState?.awaitingBuy, gameState?.currentPlayerIndex, gameState?.boardSpaces, gameState?.drawnCard.deck, mySessionId, sendMessage, pieceAnim.isAnimating]);
+  }, [gameState?.hasRolled, gameState?.awaitingBuy, gameState?.currentPlayerIndex, gameState?.boardSpaces, gameState?.drawnCard.deck, gameState?.activeAuction.status, gameState?.activeTrade.status, gameState?.bankruptcyNegotiation.status, mySessionId, sendMessage, pieceAnim.isAnimating]);
 
   // Piece selection
   const handleSelectPiece = useCallback((pieceId: string) => {
@@ -261,6 +316,9 @@ export const App: React.FC = () => {
     sendMessage("use_jail_card");
   }, [sendMessage]);
 
+  // Property info modal state
+  const [selectedPropertyIndex, setSelectedPropertyIndex] = useState<number | null>(null);
+
   // Trade state
   const [tradeTargetSessionId, setTradeTargetSessionId] = useState<string | null>(null);
 
@@ -291,6 +349,15 @@ export const App: React.FC = () => {
     sendMessage("cancel_trade");
   }, [sendMessage]);
 
+  const handleCounterOffer = useCallback((data: {
+    offeredProperties: number[];
+    requestedProperties: number[];
+    offeredCoins: number;
+    requestedCoins: number;
+  }) => {
+    sendMessage("counter_offer", data);
+  }, [sendMessage]);
+
   const handleCloseTradeModal = useCallback(() => {
     setTradeTargetSessionId(null);
   }, []);
@@ -298,6 +365,55 @@ export const App: React.FC = () => {
   // Card dismiss handler
   const handleDismissCard = useCallback(() => {
     sendMessage("dismiss_card");
+  }, [sendMessage]);
+
+  // Mortgage handlers
+  const handleMortgageProperty = useCallback((spaceIndex: number) => {
+    sendMessage("mortgage_property", { spaceIndex });
+  }, [sendMessage]);
+
+  const handleUnmortgageProperty = useCallback((spaceIndex: number) => {
+    sendMessage("unmortgage_property", { spaceIndex });
+  }, [sendMessage]);
+
+  // Sell building handlers
+  const handleSellHouse = useCallback((spaceIndex: number) => {
+    sendMessage("sell_house", { spaceIndex });
+  }, [sendMessage]);
+
+  const handleSellHotel = useCallback((spaceIndex: number, convertToHouses: boolean) => {
+    sendMessage("sell_hotel", { spaceIndex, convertToHouses });
+  }, [sendMessage]);
+
+  // Auction handlers
+  const handlePlaceBid = useCallback((amount: number) => {
+    sendMessage("place_bid", { amount });
+  }, [sendMessage]);
+
+  const handlePassAuction = useCallback(() => {
+    sendMessage("pass_auction");
+  }, [sendMessage]);
+
+  // Bankruptcy negotiation handlers
+  const handleBankruptcySellBuilding = useCallback((spaceIndex: number, type: string, convertToHouses?: boolean) => {
+    sendMessage("bankruptcy_sell_building", { spaceIndex, type, convertToHouses: convertToHouses || false });
+  }, [sendMessage]);
+
+  const handleBankruptcyMortgage = useCallback((spaceIndex: number) => {
+    sendMessage("bankruptcy_mortgage", { spaceIndex });
+  }, [sendMessage]);
+
+  const handleBankruptcyPayDebt = useCallback(() => {
+    sendMessage("bankruptcy_pay_debt");
+  }, [sendMessage]);
+
+  const handleBankruptcyDeclare = useCallback(() => {
+    sendMessage("bankruptcy_declare");
+  }, [sendMessage]);
+
+  // Turn timer extension handler
+  const handleRequestTimeExtension = useCallback(() => {
+    sendMessage("request_time_extension");
   }, [sendMessage]);
 
   // Quit game state
@@ -308,6 +424,16 @@ export const App: React.FC = () => {
       room.leave();
     }
   }, [room]);
+
+  // Return to lobby handler — resets client-side animation/turn refs
+  const handleReturnToLobby = useCallback(() => {
+    sendMessage("return_to_lobby");
+    prevTurnRef.current = -1;
+    prevActionRef.current = "";
+    setShowTurnSplash(false);
+    setEventMessage("");
+    if (autoEndTimerRef.current) clearTimeout(autoEndTimerRef.current);
+  }, [sendMessage]);
 
   // Determine if trade modal should be visible
   const showTradeModal =
@@ -351,8 +477,18 @@ export const App: React.FC = () => {
     );
   }
 
+  // Derive spectator status
+  const isSpectator = gameState.spectators.has(mySessionId);
+
   // Lobby phase
   if (gameState.phase === "lobby") {
+    if (isSpectator) {
+      return (
+        <div className="loading-screen">
+          <p>Waiting for game to start...</p>
+        </div>
+      );
+    }
     return (
       <Lobby
         gameState={gameState}
@@ -368,7 +504,7 @@ export const App: React.FC = () => {
 
   // Game over phase
   if (gameState.phase === "finished") {
-    return <GameOver gameState={gameState} mySessionId={mySessionId} />;
+    return <GameOver gameState={gameState} mySessionId={mySessionId} onReturnToLobby={handleReturnToLobby} />;
   }
 
   // Playing phase
@@ -381,6 +517,17 @@ export const App: React.FC = () => {
 
   return (
     <div className="game-layout">
+      {/* Game log overlay */}
+      <GameLog gameLog={gameState.gameLog} />
+
+      {/* Achievement / Goal toast notifications */}
+      <AchievementToast
+        achievementNotifications={achievementNotifications}
+        goalNotifications={goalNotifications}
+        onDismissAchievement={dismissAchievement}
+        onDismissGoal={dismissGoal}
+      />
+
       {/* YOUR TURN splash */}
       <TurnSplash
         key={turnSplashKey}
@@ -422,29 +569,47 @@ export const App: React.FC = () => {
           animPieceId={pieceAnim.animPieceId}
           animPlayerIndex={pieceAnim.animPlayerIndex}
           isAnimFinal={pieceAnim.isFinalStep}
+          onSpaceClick={(idx) => setSelectedPropertyIndex(idx)}
+        />
+
+        {/* Turn Timer */}
+        <TurnTimer
+          turnStartTime={gameState.turnStartTime}
+          turnTimeLimit={gameState.turnTimeLimit}
+          turnTimerActive={gameState.turnTimerActive}
+          turnExtensionUsed={gameState.turnExtensionUsed}
+          currentPlayerName={currentPlayer?.displayName || ""}
+          isMyTurn={isMyTurn}
+          onRequestExtension={handleRequestTimeExtension}
         />
 
         {/* Controls */}
-        <div className="controls-bar">
-          <GameControls
-            gameState={gameState}
-            mySessionId={mySessionId}
-            onRollDice={handleRollDice}
-            onBuyProperty={handleBuyProperty}
-            onSkipBuy={handleSkipBuy}
-            onBuildHouse={handleBuildHouse}
-            onBuildHotel={handleBuildHotel}
-            onEndTurn={handleEndTurn}
-            onPayJailFine={handlePayJailFine}
-            onUseJailCard={handleUseJailCard}
-          />
-          <button
-            className="controls-btn controls-btn-quit"
-            onClick={() => setShowQuitConfirm(true)}
-          >
-            Quit
-          </button>
-        </div>
+        {isSpectator ? (
+          <div className="spectator-banner">Spectating</div>
+        ) : (
+          <div className="controls-bar">
+            <GameControls
+              gameState={gameState}
+              mySessionId={mySessionId}
+              onRollDice={handleRollDice}
+              onBuyProperty={handleBuyProperty}
+              onSkipBuy={handleSkipBuy}
+              onBuildHouse={handleBuildHouse}
+              onBuildHotel={handleBuildHotel}
+              onSellHouse={handleSellHouse}
+              onSellHotel={handleSellHotel}
+              onEndTurn={handleEndTurn}
+              onPayJailFine={handlePayJailFine}
+              onUseJailCard={handleUseJailCard}
+            />
+            <button
+              className="controls-btn controls-btn-quit"
+              onClick={() => setShowQuitConfirm(true)}
+            >
+              Quit
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Sidebar */}
@@ -453,6 +618,7 @@ export const App: React.FC = () => {
           gameState={gameState}
           mySessionId={mySessionId}
           onTradeWith={handleTradeWith}
+          isSpectator={isSpectator}
         />
       </div>
 
@@ -466,6 +632,7 @@ export const App: React.FC = () => {
           onAcceptTrade={handleAcceptTrade}
           onRejectTrade={handleRejectTrade}
           onCancelTrade={handleCancelTrade}
+          onCounterOffer={handleCounterOffer}
           onClose={handleCloseTradeModal}
         />
       )}
@@ -477,6 +644,45 @@ export const App: React.FC = () => {
           gameState={gameState}
           mySessionId={mySessionId}
           onDismiss={handleDismissCard}
+        />
+      )}
+
+      {/* Auction modal */}
+      {gameState.activeAuction.status === "active" && (
+        <AuctionModal
+          gameState={gameState}
+          mySessionId={mySessionId}
+          onPlaceBid={handlePlaceBid}
+          onPass={handlePassAuction}
+          isSpectator={isSpectator}
+        />
+      )}
+
+      {/* Bankruptcy negotiation modal */}
+      {gameState.bankruptcyNegotiation.status === "active" && (
+        <BankruptcyModal
+          gameState={gameState}
+          mySessionId={mySessionId}
+          onSellBuilding={handleBankruptcySellBuilding}
+          onMortgage={handleBankruptcyMortgage}
+          onPayDebt={handleBankruptcyPayDebt}
+          onDeclareBankruptcy={handleBankruptcyDeclare}
+          isSpectator={isSpectator}
+        />
+      )}
+
+      {/* Property info modal */}
+      {selectedPropertyIndex !== null && (
+        <PropertyInfoModal
+          spaceIndex={selectedPropertyIndex}
+          boardSpaces={gameState.boardSpaces}
+          players={gameState.players}
+          onClose={() => setSelectedPropertyIndex(null)}
+          sessionId={mySessionId}
+          onMortgage={handleMortgageProperty}
+          onUnmortgage={handleUnmortgageProperty}
+          onSellHouse={handleSellHouse}
+          onSellHotel={handleSellHotel}
         />
       )}
 

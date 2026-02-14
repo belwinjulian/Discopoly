@@ -1,7 +1,10 @@
 import { Server } from "colyseus";
 import { GameRoom } from "./rooms/GameRoom.js";
-import { getPlayer, buyPiece } from "./db.js";
+import { getPlayer, buyPiece, buyCosmetic, equipCosmetic, getPlayerStats, getPlayerAchievements } from "./db.js";
 import { getPiece } from "./pieces.js";
+import { getCosmetic, ALL_COSMETICS } from "./cosmetics.js";
+import { getPlayerCurrentGoals } from "./goals.js";
+import { ACHIEVEMENTS } from "./achievements.js";
 
 const PORT = Number(process.env.PORT) || 2567;
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || "";
@@ -27,7 +30,6 @@ const gameServer = new Server({
     });
 
     // Discord OAuth2 token exchange + user info endpoint
-    // Client sends the auth code, server exchanges it for token + fetches user profile
     app.post("/discord_token", async (req: any, res: any) => {
       const { code } = req.body || {};
       if (!code) {
@@ -36,7 +38,6 @@ const gameServer = new Server({
       }
 
       try {
-        // Exchange code for access token
         const tokenResponse = await fetch("https://discord.com/api/oauth2/token", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -57,7 +58,6 @@ const gameServer = new Server({
           return;
         }
 
-        // Fetch user profile
         const userResponse = await fetch("https://discord.com/api/users/@me", {
           headers: { Authorization: `Bearer ${tokenData.access_token}` },
         });
@@ -87,7 +87,7 @@ const gameServer = new Server({
       }
     });
 
-    // Get player profile (gems, pieces, selected piece)
+    // Get player profile
     app.get("/player/:discordUserId", (req: any, res: any) => {
       const { discordUserId } = req.params;
       if (!discordUserId) {
@@ -131,11 +131,126 @@ const gameServer = new Server({
       console.log(`Player ${discordUserId} bought piece ${pieceId} for ${piece.cost} gems`);
       res.json(result);
     });
+
+    // ==================== Cosmetics Endpoints ====================
+
+    // List all cosmetics
+    app.get("/store/cosmetics", (_req: any, res: any) => {
+      res.json(ALL_COSMETICS);
+    });
+
+    // Buy a cosmetic
+    app.post("/store/buy-cosmetic", (req: any, res: any) => {
+      const { discordUserId, cosmeticId } = req.body || {};
+      if (!discordUserId || !cosmeticId) {
+        res.status(400).json({ error: "Missing discordUserId or cosmeticId" });
+        return;
+      }
+
+      const cosmetic = getCosmetic(cosmeticId);
+      if (!cosmetic) {
+        res.status(400).json({ error: "Invalid cosmetic" });
+        return;
+      }
+
+      if (cosmetic.cost === 0) {
+        res.status(400).json({ error: "This cosmetic is free" });
+        return;
+      }
+
+      const result = buyCosmetic(discordUserId, cosmeticId, cosmetic.cost);
+      if (!result) {
+        res.status(400).json({ error: "Cannot buy cosmetic - not enough gems or already owned" });
+        return;
+      }
+
+      console.log(`Player ${discordUserId} bought cosmetic ${cosmeticId} for ${cosmetic.cost} gems`);
+      res.json(result);
+    });
+
+    // Equip a cosmetic
+    app.post("/store/equip", (req: any, res: any) => {
+      const { discordUserId, type, itemId } = req.body || {};
+      if (!discordUserId || !type || itemId === undefined) {
+        res.status(400).json({ error: "Missing discordUserId, type, or itemId" });
+        return;
+      }
+
+      if (!["title", "theme", "dice"].includes(type)) {
+        res.status(400).json({ error: "Invalid type. Must be title, theme, or dice" });
+        return;
+      }
+
+      const success = equipCosmetic(discordUserId, type, itemId);
+      if (!success) {
+        res.status(400).json({ error: "Cannot equip - item not owned" });
+        return;
+      }
+
+      const player = getPlayer(discordUserId);
+      res.json(player);
+    });
+
+    // ==================== Goals Endpoint ====================
+
+    app.get("/player/:discordUserId/goals", (req: any, res: any) => {
+      const { discordUserId } = req.params;
+      if (!discordUserId) {
+        res.status(400).json({ error: "Missing discordUserId" });
+        return;
+      }
+      try {
+        const goals = getPlayerCurrentGoals(discordUserId);
+        res.json(goals);
+      } catch (error) {
+        console.error("Get goals error:", error);
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+
+    // ==================== Achievements Endpoint ====================
+
+    app.get("/player/:discordUserId/achievements", (req: any, res: any) => {
+      const { discordUserId } = req.params;
+      if (!discordUserId) {
+        res.status(400).json({ error: "Missing discordUserId" });
+        return;
+      }
+      try {
+        const unlocked = getPlayerAchievements(discordUserId);
+        const stats = getPlayerStats(discordUserId);
+        res.json({
+          definitions: ACHIEVEMENTS,
+          unlocked,
+          stats,
+        });
+      } catch (error) {
+        console.error("Get achievements error:", error);
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+
+    // ==================== Stats Endpoint ====================
+
+    app.get("/player/:discordUserId/stats", (req: any, res: any) => {
+      const { discordUserId } = req.params;
+      if (!discordUserId) {
+        res.status(400).json({ error: "Missing discordUserId" });
+        return;
+      }
+      try {
+        const stats = getPlayerStats(discordUserId);
+        res.json(stats);
+      } catch (error) {
+        console.error("Get stats error:", error);
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
   },
 });
 
-// Register game room
-gameServer.define("game", GameRoom);
+// Register game room — filterBy channelId so each voice channel gets its own room
+gameServer.define("game", GameRoom).filterBy(["channelId"]);
 
 gameServer.listen(PORT).then(() => {
   console.log(`Discopoly server listening on port ${PORT}`);

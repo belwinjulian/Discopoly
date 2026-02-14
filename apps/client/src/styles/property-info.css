@@ -1,0 +1,377 @@
+/* ==================== Property Info Modal Overlay ==================== */
+.property-info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 80;
+  animation: cardOverlayIn 0.3s ease-out;
+}
+
+/* ==================== Property Info Modal ==================== */
+.property-info-modal {
+  width: 300px;
+  border-radius: 16px;
+  overflow: hidden;
+  animation: cardReveal 0.5s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+/* ==================== District Color Header ==================== */
+.property-info-header {
+  padding: 14px 16px;
+  text-align: center;
+  font-weight: 800;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* ==================== Property Name ==================== */
+.property-info-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  margin: 0;
+  padding: 16px 20px 8px;
+}
+
+/* ==================== Info Rows ==================== */
+.property-info-details {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.property-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #ccc;
+  padding: 3px 0;
+}
+
+.property-info-row .label {
+  color: #999;
+}
+
+.property-info-row .value {
+  font-weight: 600;
+  color: #fff;
+}
+
+.property-info-row .value-unowned {
+  color: #888;
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ==================== Section Divider ==================== */
+.property-info-section {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #666;
+  text-align: center;
+  margin: 12px 20px 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ==================== Rent Scale Table ==================== */
+.property-info-rent-table {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.property-info-rent-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #aaa;
+  padding: 3px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.property-info-rent-row.current {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-weight: 600;
+}
+
+.property-info-rent-row .rent-label {
+  flex: 1;
+}
+
+.property-info-rent-row .rent-value {
+  min-width: 60px;
+  text-align: right;
+}
+
+.property-info-rent-row .rent-indicator {
+  width: 16px;
+  text-align: center;
+  font-size: 11px;
+  color: #FFD700;
+}
+
+/* ==================== District Group ==================== */
+.property-info-district-list {
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.property-info-district-item {
+  font-size: 13px;
+  color: #aaa;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.property-info-district-item.current-property {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ==================== Close Button ==================== */
+.property-info-footer {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.property-info-close-btn {
+  padding: 10px 40px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.property-info-close-btn:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ==================== Mortgage Badge ==================== */
+.property-info-mortgage-badge {
+  background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 6px 20px;
+  margin: 8px auto 0;
+  border-radius: 4px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+}
+
+/* ==================== Mortgage Actions ==================== */
+.property-info-mortgage-actions {
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.property-info-mortgage-btn,
+.property-info-unmortgage-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.property-info-mortgage-btn {
+  background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.property-info-mortgage-btn:hover {
+  transform: scale(1.02);
+  background: linear-gradient(135deg, #e67e22 0%, #c0760e 100%);
+}
+
+.property-info-unmortgage-btn {
+  background: linear-gradient(135deg, #27ae60 0%, #1e8449 100%);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.property-info-unmortgage-btn:hover:not(:disabled) {
+  transform: scale(1.02);
+  background: linear-gradient(135deg, #2ecc71 0%, #239b56 100%);
+}
+
+.property-info-unmortgage-btn:disabled {
+  background: #555;
+  color: #888;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.property-info-mortgage-note {
+  font-size: 12px;
+  color: #888;
+  text-align: center;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+/* ==================== Sell Buildings Actions ==================== */
+.property-info-sell-actions {
+  padding: 0 20px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.property-info-sell-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.property-info-sell-btn:hover {
+  transform: scale(1.02);
+  background: linear-gradient(135deg, #ef5350 0%, #d32f2f 100%);
+}
+
+.property-info-sell-convert {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+  font-size: 13px;
+}
+
+.property-info-sell-convert:hover {
+  background: linear-gradient(135deg, #ab47bc 0%, #9c27b0 100%);
+}
+
+.property-info-sell-note {
+  font-size: 11px;
+  color: #888;
+  text-align: center;
+  font-style: italic;
+  padding: 4px 0;
+  line-height: 1.4;
+}
+
+/* ==================== Mortgaged Rent Table ==================== */
+.property-info-rent-table.mortgaged {
+  opacity: 0.5;
+}
+
+.property-info-rent-table.mortgaged .property-info-rent-row {
+  text-decoration: line-through;
+}
+
+/* ==================== Section Note ==================== */
+.property-info-section .section-note {
+  font-weight: 400;
+  font-size: 10px;
+  color: #dc3545;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* ==================== District Mortgaged Indicator ==================== */
+.property-info-district-item.mortgaged {
+  opacity: 0.6;
+}
+
+.district-mortgaged-tag {
+  display: inline-block;
+  background: #dc3545;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ==================== Clickable property spaces ==================== */
+.board-space-clickable {
+  cursor: pointer;
+}
+
+.board-space-clickable:hover {
+  filter: brightness(1.2);
+}
+
+/* ==================== Mortgaged Board Space ==================== */
+.board-space-mortgaged {
+  opacity: 0.7;
+}
+
+.board-space-mortgaged .board-space-content {
+  filter: grayscale(30%);
+}
+
+.board-space-stripe-mortgaged {
+  opacity: 0.5;
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.3) 3px,
+    rgba(0, 0, 0, 0.3) 6px
+  ) !important;
+}
+
+.board-space-mortgage-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #dc3545;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 3px;
+  border-radius: 3px;
+  line-height: 1;
+  z-index: 5;
+}

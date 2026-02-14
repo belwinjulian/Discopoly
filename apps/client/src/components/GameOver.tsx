@@ -5,9 +5,10 @@ import { PLAYER_COLORS } from "../data/boardSpaces";
 interface GameOverProps {
   gameState: GameStateSnapshot;
   mySessionId: string;
+  onReturnToLobby: () => void;
 }
 
-export const GameOver: React.FC<GameOverProps> = ({ gameState, mySessionId }) => {
+export const GameOver: React.FC<GameOverProps> = ({ gameState, mySessionId, onReturnToLobby }) => {
   const winner = Array.from(gameState.players.values()).find(
     (p) => p.sessionId === gameState.winnerId
   );
@@ -78,6 +79,14 @@ export const GameOver: React.FC<GameOverProps> = ({ gameState, mySessionId }) =>
       </div>
 
       <p className="gameover-last-action">{gameState.lastAction}</p>
+
+      {gameState.hostSessionId === mySessionId ? (
+        <button className="gameover-lobby-btn" onClick={onReturnToLobby}>
+          Return to Lobby
+        </button>
+      ) : (
+        <p className="gameover-waiting">Waiting for host to return to lobby...</p>
+      )}
     </div>
   );
 };

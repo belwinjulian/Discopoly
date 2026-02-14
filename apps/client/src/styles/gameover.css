@@ -123,3 +123,32 @@
   text-align: center;
   max-width: 400px;
 }
+
+.gameover-lobby-btn {
+  margin-top: 8px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #4ecdc4, #44b09e);
+  color: #1a1a2e;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 16px rgba(78, 205, 196, 0.3);
+}
+
+.gameover-lobby-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(78, 205, 196, 0.4);
+}
+
+.gameover-lobby-btn:active {
+  transform: translateY(0);
+}
+
+.gameover-waiting {
+  font-size: 14px;
+  color: #888;
+  margin-top: 8px;
+}

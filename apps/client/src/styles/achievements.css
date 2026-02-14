@@ -1,0 +1,264 @@
+/* ==================== Achievements Panel ==================== */
+.ach-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: storeFadeIn 0.2s ease-out;
+}
+
+.ach-modal {
+  background: #1e1e3a;
+  border-radius: 16px;
+  padding: 20px;
+  width: 90%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.5);
+  animation: storeSlideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+}
+
+.ach-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ach-title {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #F1C40F, #E67E22);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  flex: 1;
+}
+
+.ach-total {
+  font-size: 13px;
+  color: #BB86FC;
+  font-weight: 700;
+  padding: 4px 10px;
+  background: rgba(155, 89, 182, 0.15);
+  border-radius: 8px;
+}
+
+.ach-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #888;
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.ach-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.ach-loading {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+  font-size: 14px;
+}
+
+/* ==================== Achievement Grid ==================== */
+.ach-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ach-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s;
+}
+
+.ach-card-unlocked {
+  border-color: rgba(241, 196, 15, 0.3);
+  background: rgba(241, 196, 15, 0.05);
+}
+
+.ach-card-locked {
+  opacity: 0.6;
+}
+
+.ach-icon {
+  font-size: 24px;
+  min-width: 32px;
+  text-align: center;
+}
+
+.ach-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ach-card-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ddd;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ach-card-desc {
+  font-size: 11px;
+  color: #888;
+  display: block;
+  margin-top: 2px;
+}
+
+.ach-card-gems {
+  font-size: 12px;
+  color: #BB86FC;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ach-tier-badge {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(241, 196, 15, 0.2);
+  color: #F1C40F;
+  font-weight: 700;
+}
+
+.ach-tier-progress {
+  margin-top: 4px;
+}
+
+.ach-tier-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 2px;
+}
+
+.ach-tier-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #F1C40F, #E67E22);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.ach-tier-text {
+  font-size: 10px;
+  color: #888;
+}
+
+.ach-max-tier {
+  font-size: 10px;
+  color: #F1C40F;
+  font-weight: 700;
+  margin-top: 2px;
+  display: block;
+}
+
+/* ==================== Toast Notifications ==================== */
+.toast-container {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  min-width: 260px;
+  max-width: 360px;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: toastSlideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+}
+
+.toast-achievement {
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.15), rgba(230, 126, 34, 0.15));
+  border: 1px solid rgba(241, 196, 15, 0.4);
+  box-shadow: 0 4px 16px rgba(241, 196, 15, 0.2);
+}
+
+.toast-goal {
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.15), rgba(68, 176, 158, 0.15));
+  border: 1px solid rgba(78, 205, 196, 0.4);
+  box-shadow: 0 4px 16px rgba(78, 205, 196, 0.2);
+}
+
+.toast-icon {
+  font-size: 24px;
+}
+
+.toast-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.toast-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #F1C40F;
+}
+
+.toast-goal .toast-label {
+  color: #4ECDC4;
+}
+
+.toast-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.toast-reward {
+  font-size: 11px;
+  color: #BB86FC;
+  font-weight: 700;
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

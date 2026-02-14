@@ -20,6 +20,11 @@ export interface AnimationState {
   animPlayerIndex: number;
 }
 
+export interface AnimationResult extends AnimationState {
+  /** Synchronous ref for checking animation status within the same commit phase */
+  isAnimatingRef: React.RefObject<boolean>;
+}
+
 /**
  * Compute the forward path of space indices from `from` to `to`,
  * wrapping around the board (28 spaces).
@@ -59,7 +64,7 @@ function getSpacePosition(
 export function usePieceAnimation(
   players: Map<string, PlayerState>,
   boardRef: React.RefObject<HTMLDivElement | null>
-): AnimationState {
+): AnimationResult {
   const prevPositions = useRef<Map<string, number>>(new Map());
   const [animState, setAnimState] = useState<AnimationState>({
     animatingSessionId: null,
@@ -188,5 +193,5 @@ export function usePieceAnimation(
     animTimerRef.current = setTimeout(advanceStep, 50);
   }, [players, boardRef]);
 
-  return animState;
+  return { ...animState, isAnimatingRef };
 }

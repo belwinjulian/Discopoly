@@ -88,6 +88,57 @@
   color: #fff;
 }
 
+/* ==================== Store Tabs ==================== */
+.store-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+}
+
+.store-tab {
+  flex: 1;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #888;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.store-tab:hover {
+  color: #ccc;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.store-tab-active {
+  background: rgba(155, 89, 182, 0.2);
+  color: #BB86FC;
+}
+
+.store-item-desc {
+  font-size: 9px;
+  color: #666;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.store-item-equipped {
+  border-color: rgba(155, 89, 182, 0.5) !important;
+  background: rgba(155, 89, 182, 0.1) !important;
+}
+
+.store-item-badge-equipped {
+  background: rgba(155, 89, 182, 0.3) !important;
+  color: #BB86FC !important;
+}
+
 .store-error {
   padding: 8px 12px;
   background: rgba(255, 70, 70, 0.15);

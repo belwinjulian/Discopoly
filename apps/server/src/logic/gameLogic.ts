@@ -1,5 +1,5 @@
 import { ArraySchema } from "@colyseus/schema";
-import { GameState, Player, BoardSpace, TradeOffer } from "../state/GameState.js";
+import { GameState, Player, BoardSpace, TradeOffer, AuctionState, BankruptcyNegotiation } from "../state/GameState.js";
 import {
   BOARD_SPACES,
   TOTAL_SPACES,
@@ -193,7 +193,7 @@ export function getPlayerMonopolies(state: GameState, sessionId: string): string
  * Get properties where the player can build a house.
  * Rules: must have monopoly, even building (can't build on a property
  * unless all others in the district have at least as many houses),
- * max 4 houses before hotel, and must afford it.
+ * max 4 houses before hotel, must afford it, and property must not be mortgaged.
  */
 export function getBuildableProperties(state: GameState, player: Player): number[] {
   const monopolies = getPlayerMonopolies(state, player.sessionId);
@@ -203,6 +203,10 @@ export function getBuildableProperties(state: GameState, player: Player): number
     const indices = DISTRICT_PROPERTIES[district];
     const cost = HOUSE_COST[district] || 100;
     if (player.coins < cost) continue;
+
+    // Check if any property in the district is mortgaged - can't build if so
+    const anyMortgaged = indices.some((idx) => state.boardSpaces[idx]?.isMortgaged);
+    if (anyMortgaged) continue;
 
     // Get current house counts
     const houseCounts = indices.map((idx) => {
@@ -237,6 +241,10 @@ export function getHotelUpgradeableProperties(state: GameState, player: Player):
     const cost = HOTEL_COST[district] || 100;
     if (player.coins < cost) continue;
 
+    // Check if any property in the district is mortgaged - can't build if so
+    const anyMortgaged = indices.some((idx) => state.boardSpaces[idx]?.isMortgaged);
+    if (anyMortgaged) continue;
+
     // All properties in district must have 4 houses (even building)
     const allAtFour = indices.every((idx) => {
       const s = state.boardSpaces[idx];
@@ -265,6 +273,7 @@ export function buildHouse(state: GameState, player: Player, spaceIndex: number)
     return "You don't own this property.";
   }
   if (!space.district) return "Cannot build here.";
+  if (space.isMortgaged) return "Cannot build on a mortgaged property. Unmortgage it first.";
 
   const cost = HOUSE_COST[space.district] || 100;
   const buildable = getBuildableProperties(state, player);
@@ -292,6 +301,7 @@ export function buildHotel(state: GameState, player: Player, spaceIndex: number)
     return "You don't own this property.";
   }
   if (!space.district) return "Cannot build here.";
+  if (space.isMortgaged) return "Cannot build on a mortgaged property. Unmortgage it first.";
 
   const cost = HOTEL_COST[space.district] || 100;
   const upgradeable = getHotelUpgradeableProperties(state, player);
@@ -316,18 +326,23 @@ export function buildHotel(state: GameState, player: Player, spaceIndex: number)
  */
 function processPropertyLanding(state: GameState, player: Player, space: BoardSpace): string {
   if (space.ownerId === "") {
-    // Unowned property - player can buy
+    // Unowned property - player can buy or it goes to auction
     if (player.coins >= space.price) {
       state.awaitingBuy = true;
       return `${player.displayName} landed on ${space.name} (${space.price} coins). Buy it?`;
     } else {
-      return `${player.displayName} landed on ${space.name} but can't afford it (${space.price} coins).`;
+      // Can't afford — start auction for this property
+      const auctionResult = startAuction(state, space.index);
+      return `${player.displayName} landed on ${space.name} but can't afford it (${space.price} coins). ${auctionResult}`;
     }
   } else if (space.ownerId === player.sessionId) {
     // Player owns this property
     return `${player.displayName} landed on their own property: ${space.name}.`;
   } else {
-    // Another player owns this - pay rent
+    // Another player owns this - pay rent (unless mortgaged)
+    if (space.isMortgaged) {
+      return `${player.displayName} landed on ${space.name} (mortgaged - no rent).`;
+    }
     const owner = state.players.get(space.ownerId);
     if (owner && owner.isActive && !owner.isBankrupt) {
       const rentAmount = getEffectiveRent(state, space);
@@ -339,6 +354,7 @@ function processPropertyLanding(state: GameState, player: Player, space: BoardSp
 
 /**
  * Pay rent from one player to another.
+ * If the player can't afford it and has assets to sell, start bankruptcy negotiation.
  */
 function payRent(state: GameState, payer: Player, owner: Player, amount: number, spaceName: string): string {
   if (payer.coins >= amount) {
@@ -346,17 +362,26 @@ function payRent(state: GameState, payer: Player, owner: Player, amount: number,
     owner.coins += amount;
     return `${payer.displayName} paid ${amount} coins rent to ${owner.displayName} for ${spaceName}.`;
   } else {
-    // Player can't afford rent - bankrupt!
-    const remaining = payer.coins;
-    owner.coins += remaining;
-    payer.coins = 0;
-    bankruptPlayer(state, payer);
-    return `${payer.displayName} couldn't pay ${amount} coins rent to ${owner.displayName} and went bankrupt!`;
+    // Player can't afford rent — check if they have assets to liquidate
+    const totalAssetValue = calculateLiquidationValue(state, payer);
+    if (totalAssetValue + payer.coins >= amount) {
+      // Player has enough assets to potentially cover the debt — start negotiation
+      startBankruptcyNegotiation(state, payer, owner.sessionId, amount, "rent");
+      return `${payer.displayName} can't afford ${amount} coins rent to ${owner.displayName}! Bankruptcy negotiation started — sell assets to pay the debt!`;
+    } else {
+      // Player is completely bankrupt — no way to pay even by selling everything
+      const remaining = payer.coins;
+      owner.coins += remaining;
+      payer.coins = 0;
+      bankruptPlayer(state, payer, owner);
+      return `${payer.displayName} went bankrupt to ${owner.displayName}! All properties transferred.`;
+    }
   }
 }
 
 /**
  * Process landing on a tax space.
+ * If the player can't afford it and has assets to sell, start bankruptcy negotiation.
  */
 function processTaxLanding(state: GameState, player: Player, space: BoardSpace): string {
   let taxAmount = INCOME_TAX;
@@ -367,9 +392,16 @@ function processTaxLanding(state: GameState, player: Player, space: BoardSpace):
     player.coins -= taxAmount;
     return `${player.displayName} paid ${taxAmount} coins in tax.`;
   } else {
-    player.coins = 0;
-    bankruptPlayer(state, player);
-    return `${player.displayName} couldn't pay ${taxAmount} coins in tax and went bankrupt!`;
+    // Check if they have assets to liquidate
+    const totalAssetValue = calculateLiquidationValue(state, player);
+    if (totalAssetValue + player.coins >= taxAmount) {
+      startBankruptcyNegotiation(state, player, "", taxAmount, "tax");
+      return `${player.displayName} can't afford ${taxAmount} coins in tax! Bankruptcy negotiation started — sell assets to pay!`;
+    } else {
+      player.coins = 0;
+      bankruptPlayer(state, player);
+      return `${player.displayName} couldn't pay ${taxAmount} coins in tax and went bankrupt!`;
+    }
   }
 }
 
@@ -406,20 +438,31 @@ export function skipBuy(state: GameState): string {
 }
 
 /**
- * Mark a player as bankrupt and release their properties.
+ * Mark a player as bankrupt and handle their properties.
+ * If a creditor is provided, properties transfer to them (keeping mortgage status).
+ * Otherwise, properties are released back to the bank.
  */
-export function bankruptPlayer(state: GameState, player: Player): void {
+export function bankruptPlayer(state: GameState, player: Player, creditor?: Player): void {
   player.isBankrupt = true;
   player.isActive = false;
 
-  // Release all owned properties back to the bank (reset houses/hotels)
   for (let i = 0; i < player.ownedProperties.length; i++) {
     const spaceIndex = player.ownedProperties[i];
     const space = state.boardSpaces[spaceIndex];
     if (space) {
-      space.ownerId = "";
+      // Buildings always go back to the bank
       space.houses = 0;
       space.hasHotel = false;
+
+      if (creditor) {
+        // Transfer to creditor (keep mortgage status)
+        space.ownerId = creditor.sessionId;
+        creditor.ownedProperties.push(spaceIndex);
+      } else {
+        // Release to bank
+        space.ownerId = "";
+        space.isMortgaged = false;
+      }
     }
   }
   player.ownedProperties.clear();
@@ -433,6 +476,12 @@ export function bankruptPlayer(state: GameState, player: Player): void {
 export function advanceTurn(state: GameState): string {
   state.hasRolled = false;
   state.awaitingBuy = false;
+
+  // Reset doubles count for the player ending their turn
+  const currentPlayer = getCurrentPlayer(state);
+  if (currentPlayer) {
+    currentPlayer.doublesCount = 0;
+  }
 
   const activePlayers = getActivePlayers(state);
   if (activePlayers.length <= 1) {
@@ -660,6 +709,105 @@ export function clearTrade(state: GameState): void {
   state.activeTrade.requestedProperties.clear();
   state.activeTrade.offeredCoins = 0;
   state.activeTrade.requestedCoins = 0;
+  state.activeTrade.counterOfferCount = 0;
+  state.activeTrade.lastModifiedBy = "";
+  state.activeTrade.isCounterOffer = false;
+  state.activeTrade.prevOfferedProperties.clear();
+  state.activeTrade.prevRequestedProperties.clear();
+  state.activeTrade.prevOfferedCoins = 0;
+  state.activeTrade.prevRequestedCoins = 0;
+}
+
+/**
+ * Maximum number of counter-offer rounds allowed.
+ */
+export const MAX_COUNTER_OFFERS = 5;
+
+/**
+ * Process a counter-offer, swapping the trade direction and updating terms.
+ * The counter-offerer becomes the new "from" and the original offerer becomes the new "to".
+ * Returns a result message or an error string.
+ */
+export function processCounterOffer(
+  state: GameState,
+  counterOffererId: string,
+  offeredProperties: number[],
+  requestedProperties: number[],
+  offeredCoins: number,
+  requestedCoins: number
+): { success: boolean; message: string } {
+  const trade = state.activeTrade;
+
+  if (trade.status !== "pending") {
+    return { success: false, message: "No active trade to counter." };
+  }
+
+  if (trade.toSessionId !== counterOffererId) {
+    return { success: false, message: "It's not your turn to respond to this trade." };
+  }
+
+  if (trade.counterOfferCount >= MAX_COUNTER_OFFERS) {
+    return { success: false, message: `Maximum counter-offers (${MAX_COUNTER_OFFERS}) reached. Accept or reject.` };
+  }
+
+  // The counter-offerer is the current "to" player. After counter, they become "from".
+  const otherSessionId = trade.fromSessionId;
+
+  // Validate the counter-offer terms
+  const validation = validateTradeOffer(
+    state,
+    counterOffererId,
+    otherSessionId,
+    offeredProperties,
+    requestedProperties,
+    offeredCoins,
+    requestedCoins
+  );
+
+  if (!validation.valid) {
+    return { success: false, message: validation.error || "Invalid counter-offer." };
+  }
+
+  // Save previous terms for diff display (stored from the OLD fromSessionId's perspective)
+  trade.prevOfferedProperties.clear();
+  for (let i = 0; i < trade.offeredProperties.length; i++) {
+    trade.prevOfferedProperties.push(trade.offeredProperties[i]);
+  }
+  trade.prevRequestedProperties.clear();
+  for (let i = 0; i < trade.requestedProperties.length; i++) {
+    trade.prevRequestedProperties.push(trade.requestedProperties[i]);
+  }
+  trade.prevOfferedCoins = trade.offeredCoins;
+  trade.prevRequestedCoins = trade.requestedCoins;
+
+  // Swap direction: counter-offerer becomes "from", original proposer becomes "to"
+  trade.fromSessionId = counterOffererId;
+  trade.toSessionId = otherSessionId;
+
+  // Set the new trade terms (from the counter-offerer's perspective)
+  trade.offeredProperties.clear();
+  for (const idx of offeredProperties) {
+    trade.offeredProperties.push(idx);
+  }
+  trade.requestedProperties.clear();
+  for (const idx of requestedProperties) {
+    trade.requestedProperties.push(idx);
+  }
+  trade.offeredCoins = offeredCoins;
+  trade.requestedCoins = requestedCoins;
+
+  // Update counter-offer metadata
+  trade.counterOfferCount++;
+  trade.lastModifiedBy = counterOffererId;
+  trade.isCounterOffer = true;
+
+  const counterOfferer = state.players.get(counterOffererId);
+  const otherPlayer = state.players.get(otherSessionId);
+
+  return {
+    success: true,
+    message: `${counterOfferer?.displayName} sent a counter-offer to ${otherPlayer?.displayName}. (${trade.counterOfferCount}/${MAX_COUNTER_OFFERS})`,
+  };
 }
 
 // ==================== Card Logic ====================
@@ -722,9 +870,16 @@ function applyCardEffect(state: GameState, card: CardDefinition, player: Player)
       if (player.coins >= amount) {
         player.coins -= amount;
       } else {
-        player.coins = 0;
-        bankruptPlayer(state, player);
-        return `${player.displayName} drew "${card.title}" and went bankrupt!`;
+        // Check if they have assets to liquidate
+        const totalAssetValue = calculateLiquidationValue(state, player);
+        if (totalAssetValue + player.coins >= amount) {
+          startBankruptcyNegotiation(state, player, "", amount, "card");
+          return `${player.displayName} drew "${card.title}" but can't afford ${amount} coins! Bankruptcy negotiation started!`;
+        } else {
+          player.coins = 0;
+          bankruptPlayer(state, player);
+          return `${player.displayName} drew "${card.title}" and went bankrupt!`;
+        }
       }
       return `${player.displayName} drew "${card.title}" — ${card.description}`;
     }
@@ -799,15 +954,22 @@ function applyCardEffect(state: GameState, card: CardDefinition, player: Player)
         }
         return `${player.displayName} drew "${card.title}" — paid ${totalCost} coins to other players!`;
       } else {
-        // Pay what they can, then bankrupt
-        const perPlayer = Math.floor(player.coins / Math.max(otherCount, 1));
-        for (const other of activePlayers) {
-          if (other.sessionId === player.sessionId) continue;
-          other.coins += perPlayer;
+        // Check if they have assets to liquidate
+        const totalAssetValue = calculateLiquidationValue(state, player);
+        if (totalAssetValue + player.coins >= totalCost) {
+          startBankruptcyNegotiation(state, player, "", totalCost, "card");
+          return `${player.displayName} drew "${card.title}" but can't afford ${totalCost} coins! Bankruptcy negotiation started!`;
+        } else {
+          // Pay what they can, then bankrupt
+          const perPlayer = Math.floor(player.coins / Math.max(otherCount, 1));
+          for (const other of activePlayers) {
+            if (other.sessionId === player.sessionId) continue;
+            other.coins += perPlayer;
+          }
+          player.coins = 0;
+          bankruptPlayer(state, player);
+          return `${player.displayName} drew "${card.title}" and went bankrupt!`;
         }
-        player.coins = 0;
-        bankruptPlayer(state, player);
-        return `${player.displayName} drew "${card.title}" and went bankrupt!`;
       }
     }
 
@@ -824,4 +986,653 @@ export function clearDrawnCard(state: GameState): void {
   state.drawnCard.title = "";
   state.drawnCard.description = "";
   state.drawnCard.forSessionId = "";
+}
+
+// ==================== Mortgage Logic ====================
+
+/**
+ * Calculate the mortgage value for a property (50% of price).
+ */
+export function getMortgageValue(space: BoardSpace): number {
+  return Math.floor(space.price / 2);
+}
+
+/**
+ * Calculate the cost to unmortgage a property (mortgage value + 10% interest = 55% of price).
+ */
+export function getUnmortgageCost(space: BoardSpace): number {
+  return Math.floor(space.price * 0.55);
+}
+
+/**
+ * Get properties that a player can mortgage.
+ * Rules: must own the property, no buildings, not already mortgaged.
+ */
+export function getMortgageableProperties(state: GameState, player: Player): number[] {
+  const mortgageable: number[] = [];
+  
+  for (let i = 0; i < player.ownedProperties.length; i++) {
+    const spaceIndex = player.ownedProperties[i];
+    const space = state.boardSpaces[spaceIndex];
+    
+    if (!space) continue;
+    if (space.isMortgaged) continue;
+    if (space.houses > 0 || space.hasHotel) continue;
+    
+    mortgageable.push(spaceIndex);
+  }
+  
+  return mortgageable;
+}
+
+/**
+ * Get mortgaged properties that a player can unmortgage.
+ * Rules: must be mortgaged and player must have enough coins.
+ */
+export function getUnmortgageableProperties(state: GameState, player: Player): number[] {
+  const unmortgageable: number[] = [];
+  
+  for (let i = 0; i < player.ownedProperties.length; i++) {
+    const spaceIndex = player.ownedProperties[i];
+    const space = state.boardSpaces[spaceIndex];
+    
+    if (!space) continue;
+    if (!space.isMortgaged) continue;
+    
+    const cost = getUnmortgageCost(space);
+    if (player.coins >= cost) {
+      unmortgageable.push(spaceIndex);
+    }
+  }
+  
+  return unmortgageable;
+}
+
+/**
+ * Mortgage a property. Player receives 50% of the property price.
+ * Returns result message.
+ */
+export function mortgageProperty(state: GameState, player: Player, spaceIndex: number): string {
+  const space = state.boardSpaces[spaceIndex];
+  
+  if (!space) {
+    return "Invalid property.";
+  }
+  if (space.ownerId !== player.sessionId) {
+    return "You don't own this property.";
+  }
+  if (space.isMortgaged) {
+    return "This property is already mortgaged.";
+  }
+  if (space.houses > 0 || space.hasHotel) {
+    return "Cannot mortgage a property with buildings. Sell them first.";
+  }
+  
+  const mortgageValue = getMortgageValue(space);
+  space.isMortgaged = true;
+  player.coins += mortgageValue;
+  
+  return `${player.displayName} mortgaged ${space.name} for ${mortgageValue} coins.`;
+}
+
+/**
+ * Unmortgage a property. Player pays mortgage value + 10% interest.
+ * Returns result message.
+ */
+export function unmortgageProperty(state: GameState, player: Player, spaceIndex: number): string {
+  const space = state.boardSpaces[spaceIndex];
+  
+  if (!space) {
+    return "Invalid property.";
+  }
+  if (space.ownerId !== player.sessionId) {
+    return "You don't own this property.";
+  }
+  if (!space.isMortgaged) {
+    return "This property is not mortgaged.";
+  }
+  
+  const cost = getUnmortgageCost(space);
+  if (player.coins < cost) {
+    return `Not enough coins to unmortgage. Need ${cost} coins.`;
+  }
+  
+  player.coins -= cost;
+  space.isMortgaged = false;
+  
+  return `${player.displayName} unmortgaged ${space.name} for ${cost} coins.`;
+}
+
+// ==================== Sell Building Logic ====================
+
+/**
+ * Calculate the sell value for a house (50% of house cost).
+ */
+export function getHouseSellValue(district: string): number {
+  const houseCost = HOUSE_COST[district] || 100;
+  return Math.floor(houseCost / 2);
+}
+
+/**
+ * Calculate the sell value for a hotel (50% of hotel cost).
+ */
+export function getHotelSellValue(district: string): number {
+  const hotelCost = HOTEL_COST[district] || 100;
+  return Math.floor(hotelCost / 2);
+}
+
+/**
+ * Get properties where the player can sell a house.
+ * Rules: must own the property, must have at least 1 house (no hotel),
+ * and must follow even selling (can only sell from properties with MAX houses in district).
+ */
+export function getSellableHouseProperties(state: GameState, player: Player): number[] {
+  const monopolies = getPlayerMonopolies(state, player.sessionId);
+  const sellable: number[] = [];
+
+  for (const district of monopolies) {
+    const indices = DISTRICT_PROPERTIES[district];
+    
+    // Get current house counts (hotels count as 5)
+    const houseCounts = indices.map((idx) => {
+      const s = state.boardSpaces[idx];
+      return s.hasHotel ? 5 : s.houses;
+    });
+    const maxHouses = Math.max(...houseCounts);
+
+    // Can only sell houses (not hotels) - hotels must be sold separately
+    // Even selling: can only sell from properties with the max houses in the district
+    for (let i = 0; i < indices.length; i++) {
+      const space = state.boardSpaces[indices[i]];
+      if (space.hasHotel) continue; // must sell hotel first
+      if (space.houses === 0) continue; // no houses to sell
+      // Even selling: can only sell if this property has the max houses in the district
+      if (houseCounts[i] >= maxHouses) {
+        sellable.push(indices[i]);
+      }
+    }
+  }
+
+  return sellable;
+}
+
+/**
+ * Get properties where the player can sell a hotel.
+ * Rules: must own the property, must have a hotel,
+ * and for even selling: all other properties in district must have 4 houses or a hotel.
+ */
+export function getSellableHotelProperties(state: GameState, player: Player): number[] {
+  const monopolies = getPlayerMonopolies(state, player.sessionId);
+  const sellable: number[] = [];
+
+  for (const district of monopolies) {
+    const indices = DISTRICT_PROPERTIES[district];
+    
+    // Get current house counts (hotels count as 5)
+    const houseCounts = indices.map((idx) => {
+      const s = state.boardSpaces[idx];
+      return s.hasHotel ? 5 : s.houses;
+    });
+    const maxHouses = Math.max(...houseCounts);
+
+    // For hotels, we need to check even selling
+    // Can only sell a hotel if it's at the max level in the district
+    for (let i = 0; i < indices.length; i++) {
+      const space = state.boardSpaces[indices[i]];
+      if (!space.hasHotel) continue; // no hotel to sell
+      // Even selling: can only sell if this property has the max (which is 5 for hotel)
+      if (houseCounts[i] >= maxHouses) {
+        sellable.push(indices[i]);
+      }
+    }
+  }
+
+  return sellable;
+}
+
+/**
+ * Sell a house from a property. Player receives 50% of house cost.
+ * Returns result message.
+ */
+export function sellHouse(state: GameState, player: Player, spaceIndex: number): string {
+  const space = state.boardSpaces[spaceIndex];
+  
+  if (!space) {
+    return "Invalid property.";
+  }
+  if (space.ownerId !== player.sessionId) {
+    return "You don't own this property.";
+  }
+  if (space.hasHotel) {
+    return "This property has a hotel. Sell the hotel first.";
+  }
+  if (space.houses === 0) {
+    return "This property has no houses to sell.";
+  }
+  if (!space.district) {
+    return "Cannot sell buildings here.";
+  }
+  
+  const sellable = getSellableHouseProperties(state, player);
+  if (!sellable.includes(spaceIndex)) {
+    return "Cannot sell here. Sell evenly across the district (sell from properties with the most houses first).";
+  }
+  
+  const sellValue = getHouseSellValue(space.district);
+  space.houses--;
+  player.coins += sellValue;
+  
+  return `${player.displayName} sold a house on ${space.name} for ${sellValue} coins. (${space.houses}/4 houses)`;
+}
+
+/**
+ * Sell a hotel from a property. Player receives 50% of hotel cost.
+ * If convertToHouses is true, the hotel is converted back to 4 houses (no additional cost in standard rules).
+ * If convertToHouses is false, all buildings are removed.
+ * Returns result message.
+ */
+export function sellHotel(state: GameState, player: Player, spaceIndex: number, convertToHouses: boolean): string {
+  const space = state.boardSpaces[spaceIndex];
+  
+  if (!space) {
+    return "Invalid property.";
+  }
+  if (space.ownerId !== player.sessionId) {
+    return "You don't own this property.";
+  }
+  if (!space.hasHotel) {
+    return "This property doesn't have a hotel.";
+  }
+  if (!space.district) {
+    return "Cannot sell buildings here.";
+  }
+  
+  const sellable = getSellableHotelProperties(state, player);
+  if (!sellable.includes(spaceIndex)) {
+    return "Cannot sell here. Sell evenly across the district.";
+  }
+  
+  const sellValue = getHotelSellValue(space.district);
+  space.hasHotel = false;
+  player.coins += sellValue;
+  
+  if (convertToHouses) {
+    // Convert back to 4 houses
+    space.houses = MAX_HOUSES;
+    return `${player.displayName} sold the hotel on ${space.name} for ${sellValue} coins and kept 4 houses.`;
+  } else {
+    // Remove all buildings
+    space.houses = 0;
+    return `${player.displayName} sold the hotel on ${space.name} for ${sellValue} coins.`;
+  }
+}
+
+// ==================== Bankruptcy Negotiation Logic ====================
+
+const BANKRUPTCY_NEGOTIATION_DURATION = 45; // seconds
+
+/**
+ * Calculate the total value a player could raise by selling all buildings
+ * and mortgaging all unmortgaged properties.
+ */
+export function calculateLiquidationValue(state: GameState, player: Player): number {
+  let value = 0;
+
+  for (let i = 0; i < player.ownedProperties.length; i++) {
+    const spaceIndex = player.ownedProperties[i];
+    const space = state.boardSpaces[spaceIndex];
+    if (!space) continue;
+
+    // Value from selling hotel
+    if (space.hasHotel && space.district) {
+      const hotelSell = Math.floor((HOTEL_COST[space.district] || 100) / 2);
+      value += hotelSell;
+      // After selling hotel, the 4 houses that went into it can also be sold
+      const houseSell = Math.floor((HOUSE_COST[space.district] || 100) / 2);
+      value += houseSell * MAX_HOUSES;
+    }
+
+    // Value from selling houses
+    if (space.houses > 0 && space.district) {
+      const houseSell = Math.floor((HOUSE_COST[space.district] || 100) / 2);
+      value += houseSell * space.houses;
+    }
+
+    // Value from mortgaging (if not already mortgaged and no buildings)
+    // For properties with buildings, we account for mortgage after buildings are sold
+    if (!space.isMortgaged) {
+      value += Math.floor(space.price / 2); // mortgage value
+    }
+  }
+
+  return value;
+}
+
+/**
+ * Start a bankruptcy negotiation phase for a player who can't pay a debt.
+ */
+export function startBankruptcyNegotiation(
+  state: GameState,
+  debtor: Player,
+  creditorSessionId: string,
+  amount: number,
+  reason: string
+): void {
+  const negotiation = state.bankruptcyNegotiation;
+  negotiation.status = "active";
+  negotiation.debtorSessionId = debtor.sessionId;
+  negotiation.creditorSessionId = creditorSessionId;
+  negotiation.amountOwed = amount;
+  negotiation.reason = reason;
+  negotiation.deadline = Math.floor(Date.now() / 1000) + BANKRUPTCY_NEGOTIATION_DURATION;
+}
+
+/**
+ * Clear the bankruptcy negotiation state.
+ */
+export function clearBankruptcyNegotiation(state: GameState): void {
+  const negotiation = state.bankruptcyNegotiation;
+  negotiation.status = "none";
+  negotiation.debtorSessionId = "";
+  negotiation.creditorSessionId = "";
+  negotiation.amountOwed = 0;
+  negotiation.reason = "";
+  negotiation.deadline = 0;
+}
+
+/**
+ * Resolve the bankruptcy negotiation by paying the debt.
+ * Returns a result message or null if payment can't be made.
+ */
+export function resolveBankruptcyPayment(state: GameState): string | null {
+  const negotiation = state.bankruptcyNegotiation;
+  if (negotiation.status !== "active") return null;
+
+  const debtor = state.players.get(negotiation.debtorSessionId);
+  if (!debtor) return null;
+
+  if (debtor.coins < negotiation.amountOwed) return null;
+
+  const amount = negotiation.amountOwed;
+  const creditorId = negotiation.creditorSessionId;
+
+  if (creditorId) {
+    // Pay to creditor (another player)
+    const creditor = state.players.get(creditorId);
+    if (creditor) {
+      debtor.coins -= amount;
+      creditor.coins += amount;
+      clearBankruptcyNegotiation(state);
+      return `${debtor.displayName} raised enough funds and paid ${amount} coins to ${creditor.displayName}!`;
+    }
+  }
+
+  // Pay to bank (tax, card, etc.)
+  debtor.coins -= amount;
+  clearBankruptcyNegotiation(state);
+  return `${debtor.displayName} raised enough funds and paid ${amount} coins!`;
+}
+
+/**
+ * Handle a player declaring bankruptcy during negotiation.
+ * Transfers remaining assets to creditor (or bank).
+ */
+export function declareBankruptcy(state: GameState): string {
+  const negotiation = state.bankruptcyNegotiation;
+  const debtor = state.players.get(negotiation.debtorSessionId);
+  if (!debtor) {
+    clearBankruptcyNegotiation(state);
+    return "Bankruptcy declared.";
+  }
+
+  const creditorId = negotiation.creditorSessionId;
+  let creditor: Player | undefined;
+
+  if (creditorId) {
+    creditor = state.players.get(creditorId);
+    if (creditor) {
+      // Transfer remaining coins to creditor
+      creditor.coins += debtor.coins;
+    }
+  }
+  debtor.coins = 0;
+
+  bankruptPlayer(state, debtor, creditor);
+  clearBankruptcyNegotiation(state);
+
+  if (creditor) {
+    return `${debtor.displayName} declared bankruptcy! All assets transferred to ${creditor.displayName}.`;
+  }
+  return `${debtor.displayName} declared bankruptcy! All properties returned to the bank.`;
+}
+
+/**
+ * Handle bankruptcy negotiation timeout.
+ * Same as declaring bankruptcy.
+ */
+export function handleBankruptcyTimeout(state: GameState): string {
+  const negotiation = state.bankruptcyNegotiation;
+  const debtor = state.players.get(negotiation.debtorSessionId);
+  if (!debtor) {
+    clearBankruptcyNegotiation(state);
+    return "Bankruptcy negotiation timed out.";
+  }
+
+  return declareBankruptcy(state);
+}
+
+/**
+ * Check if bankruptcy negotiation has timed out.
+ */
+export function isBankruptcyTimedOut(state: GameState): boolean {
+  const negotiation = state.bankruptcyNegotiation;
+  if (negotiation.status !== "active") return false;
+  const now = Math.floor(Date.now() / 1000);
+  return now >= negotiation.deadline;
+}
+
+// ==================== Auction Logic ====================
+
+/**
+ * Start an auction for a property.
+ * Called when a player declines to buy a property they landed on.
+ */
+export function startAuction(state: GameState, propertyIndex: number): string {
+  const space = state.boardSpaces[propertyIndex];
+  if (!space || space.spaceType !== "property") {
+    return "Cannot auction this space.";
+  }
+  if (space.ownerId !== "") {
+    return "This property is already owned.";
+  }
+
+  state.activeAuction.status = "active";
+  state.activeAuction.propertyIndex = propertyIndex;
+  state.activeAuction.currentBid = 0;
+  state.activeAuction.highestBidderId = "";
+  state.activeAuction.passedPlayers.clear();
+
+  return `${space.name} is now up for auction! Minimum bid: 1 coin.`;
+}
+
+/**
+ * Place a bid in the current auction.
+ * Returns result message.
+ */
+export function placeBid(state: GameState, player: Player, amount: number): string {
+  const auction = state.activeAuction;
+
+  if (auction.status !== "active") {
+    return "No auction is currently active.";
+  }
+  if (!player.isActive || player.isBankrupt) {
+    return "You cannot participate in this auction.";
+  }
+  if (amount <= auction.currentBid) {
+    return `Bid must be higher than the current bid of ${auction.currentBid} coins.`;
+  }
+  if (amount < 1) {
+    return "Minimum bid is 1 coin.";
+  }
+  if (player.coins < amount) {
+    return `You don't have enough coins. You have ${player.coins} coins.`;
+  }
+
+  // Update auction state
+  auction.currentBid = amount;
+  auction.highestBidderId = player.sessionId;
+
+  // Remove from passed players (in case they passed then decided to bid)
+  if (auction.passedPlayers.has(player.sessionId)) {
+    auction.passedPlayers.delete(player.sessionId);
+  }
+
+  const space = state.boardSpaces[auction.propertyIndex];
+
+  // Check if auction should end (all other active players have passed)
+  const endResult = checkAuctionEnd(state);
+  if (endResult) {
+    return endResult;
+  }
+
+  return `${player.displayName} bid ${amount} coins for ${space.name}!`;
+}
+
+/**
+ * Pass on the current auction.
+ * Returns result message.
+ */
+export function passAuction(state: GameState, player: Player): string {
+  const auction = state.activeAuction;
+
+  if (auction.status !== "active") {
+    return "No auction is currently active.";
+  }
+  if (!player.isActive || player.isBankrupt) {
+    return "You cannot participate in this auction.";
+  }
+  if (auction.passedPlayers.has(player.sessionId)) {
+    return "You have already passed.";
+  }
+  // Highest bidder cannot pass (they're winning)
+  if (player.sessionId === auction.highestBidderId) {
+    return "You cannot pass while you are the highest bidder.";
+  }
+
+  // Add to passed players
+  auction.passedPlayers.add(player.sessionId);
+
+  // Check if auction should end
+  const endResult = checkAuctionEnd(state);
+  if (endResult) {
+    return endResult;
+  }
+
+  return `${player.displayName} passed on the auction.`;
+}
+
+/**
+ * Check if the auction should end and end it if so.
+ * Auction ends when all active players except the highest bidder have passed.
+ * Returns end message if auction ended, null otherwise.
+ */
+export function checkAuctionEnd(state: GameState): string | null {
+  const auction = state.activeAuction;
+
+  if (auction.status !== "active") {
+    return null;
+  }
+
+  const activePlayers = getActivePlayers(state);
+  const activePlayerCount = activePlayers.length;
+
+  // Count how many active players have passed
+  let passedCount = 0;
+  for (const player of activePlayers) {
+    if (auction.passedPlayers.has(player.sessionId)) {
+      passedCount++;
+    }
+  }
+
+  // If highest bidder exists, they don't count as needing to pass
+  // Auction ends when all OTHER active players have passed
+  const playersWhoNeedToPass = auction.highestBidderId
+    ? activePlayerCount - 1 // Everyone except the highest bidder
+    : activePlayerCount; // Everyone (no bidder yet)
+
+  // End if all players who need to pass have passed
+  if (passedCount >= playersWhoNeedToPass) {
+    return endAuction(state);
+  }
+
+  return null;
+}
+
+/**
+ * End the current auction.
+ * Transfers property to highest bidder or leaves it unowned.
+ * Returns result message.
+ */
+export function endAuction(state: GameState): string {
+  const auction = state.activeAuction;
+  const space = state.boardSpaces[auction.propertyIndex];
+  let result: string;
+
+  if (auction.highestBidderId && auction.currentBid > 0) {
+    // Someone won the auction
+    const winner = state.players.get(auction.highestBidderId);
+    if (winner) {
+      winner.coins -= auction.currentBid;
+      space.ownerId = winner.sessionId;
+      winner.ownedProperties.push(space.index);
+      result = `${winner.displayName} won ${space.name} for ${auction.currentBid} coins!`;
+    } else {
+      result = `Auction ended but winner not found. ${space.name} remains unowned.`;
+    }
+  } else {
+    // No bids - property remains unowned
+    result = `No bids placed. ${space.name} remains unowned.`;
+  }
+
+  // Clear auction state
+  clearAuction(state);
+
+  return result;
+}
+
+/**
+ * Clear the auction state.
+ */
+export function clearAuction(state: GameState): void {
+  state.activeAuction.status = "none";
+  state.activeAuction.propertyIndex = 0;
+  state.activeAuction.currentBid = 0;
+  state.activeAuction.highestBidderId = "";
+  state.activeAuction.passedPlayers.clear();
+}
+
+/**
+ * Handle a player disconnecting during an auction.
+ * Marks them as passed. If they were the highest bidder, the auction continues without them.
+ */
+export function handlePlayerDisconnectAuction(state: GameState, sessionId: string): void {
+  const auction = state.activeAuction;
+
+  if (auction.status !== "active") {
+    return;
+  }
+
+  // If player was highest bidder, clear that
+  if (auction.highestBidderId === sessionId) {
+    auction.highestBidderId = "";
+    auction.currentBid = 0;
+  }
+
+  // Mark as passed
+  if (!auction.passedPlayers.has(sessionId)) {
+    auction.passedPlayers.add(sessionId);
+  }
+
+  // Check if auction should end
+  checkAuctionEnd(state);
 }

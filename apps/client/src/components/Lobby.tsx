@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { GameStateSnapshot, PlayerStoreData } from "../hooks/useGameState";
 import { PLAYER_COLORS } from "../data/boardSpaces";
 import { getPieceEmoji, PIECES } from "../data/pieces";
+import { getTitleDisplay } from "../data/cosmetics";
 import { Store } from "./Store";
+import { GoalsPanel } from "./GoalsPanel";
+import { AchievementsPanel } from "./AchievementsPanel";
 import "../styles/lobby.css";
 
 interface LobbyProps {
@@ -25,6 +28,8 @@ export const Lobby: React.FC<LobbyProps> = ({
   onStoreUpdate,
 }) => {
   const [showStore, setShowStore] = useState(false);
+  const [showGoals, setShowGoals] = useState(false);
+  const [showAchievements, setShowAchievements] = useState(false);
   const isHost = gameState.hostSessionId === mySessionId;
   const players = Array.from(gameState.players.values());
   const canStart = players.length >= 1; // TODO: change back to 2 for production
@@ -71,7 +76,12 @@ export const Lobby: React.FC<LobbyProps> = ({
                 </span>
               </div>
               <div className="lobby-player-info">
-                <span className="lobby-player-name">{player.displayName}</span>
+                <span className="lobby-player-name">
+                  {player.displayName}
+                  {player.sessionId === mySessionId && playerStoreData?.equippedTitle && (
+                    <span className="lobby-title-badge">{getTitleDisplay(playerStoreData.equippedTitle)}</span>
+                  )}
+                </span>
                 {player.sessionId === gameState.hostSessionId && (
                   <span className="lobby-host-badge">HOST</span>
                 )}
@@ -119,12 +129,26 @@ export const Lobby: React.FC<LobbyProps> = ({
             );
           })}
         </div>
-        <button
-          className="lobby-store-btn"
-          onClick={() => setShowStore(true)}
-        >
-          💎 Store {playerStoreData ? `(${playerStoreData.gems} gems)` : ""}
-        </button>
+        <div className="lobby-action-btns">
+          <button
+            className="lobby-store-btn"
+            onClick={() => setShowStore(true)}
+          >
+            💎 Store {playerStoreData ? `(${playerStoreData.gems} gems)` : ""}
+          </button>
+          <button
+            className="lobby-goals-btn"
+            onClick={() => setShowGoals(true)}
+          >
+            🎯 Goals
+          </button>
+          <button
+            className="lobby-achievements-btn"
+            onClick={() => setShowAchievements(true)}
+          >
+            🏆 Achievements
+          </button>
+        </div>
       </div>
 
       <div className="lobby-actions">
@@ -152,6 +176,22 @@ export const Lobby: React.FC<LobbyProps> = ({
           playerStoreData={playerStoreData}
           onClose={() => setShowStore(false)}
           onUpdate={onStoreUpdate}
+        />
+      )}
+
+      {/* Goals Modal */}
+      {showGoals && (
+        <GoalsPanel
+          discordUserId={discordUserId}
+          onClose={() => setShowGoals(false)}
+        />
+      )}
+
+      {/* Achievements Modal */}
+      {showAchievements && (
+        <AchievementsPanel
+          discordUserId={discordUserId}
+          onClose={() => setShowAchievements(false)}
         />
       )}
     </div>

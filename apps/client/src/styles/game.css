@@ -11,6 +11,7 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
+  min-height: 0;
   height: 100vh;
   overflow: hidden;
 }
@@ -35,18 +36,18 @@
 }
 
 .dice {
-  font-size: 24px;
+  font-size: 20px;
   line-height: 1;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   animation: diceAppear 0.3s ease-out;
 }
 
 .dice-total {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: #FFD700;
   background: rgba(255, 215, 0, 0.1);
-  padding: 4px 10px;
+  padding: 2px 8px;
   border-radius: 6px;
 }
 
@@ -63,13 +64,13 @@
 
 /* ==================== Game Controls ==================== */
 .game-controls {
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: rgba(255, 255, 255, 0.05);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
 }
 
@@ -99,8 +100,8 @@
 }
 
 .controls-btn {
-  padding: 8px 20px;
-  font-size: 14px;
+  padding: 6px 16px;
+  font-size: 13px;
   font-weight: 700;
   border: none;
   border-radius: 8px;
@@ -328,6 +329,15 @@
   box-shadow: 0 4px 16px rgba(46, 204, 113, 0.3);
 }
 
+.controls-btn-sell {
+  background: linear-gradient(135deg, #E74C3C, #C0392B);
+  color: #fff;
+}
+
+.controls-btn-sell:hover {
+  box-shadow: 0 4px 16px rgba(231, 76, 60, 0.3);
+}
+
 /* ==================== Build Panel ==================== */
 .controls-build-panel {
   width: 100%;
@@ -396,6 +406,31 @@
   font-size: 10px;
   color: #FFD700;
   font-weight: 600;
+}
+
+/* ==================== Sell Panel ==================== */
+.controls-sell-panel {
+  background: rgba(231, 76, 60, 0.06);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+.sell-option-btn {
+  border-left-color: #E74C3C;
+}
+
+.sell-value {
+  color: #2ECC71;
+}
+
+.sell-hotel-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sell-convert-btn {
+  opacity: 0.85;
+  font-size: 10px;
 }
 
 /* ==================== Controls Bar (wraps GameControls + Quit) ==================== */
@@ -609,6 +644,23 @@
   white-space: nowrap;
 }
 
+.controls-doubles-indicator {
+  font-size: 12px;
+  font-weight: 700;
+  color: #FFD700;
+  text-align: center;
+  padding: 4px 8px;
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 6px;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 4px rgba(255, 215, 0, 0.2); }
+  50% { box-shadow: 0 0 12px rgba(255, 215, 0, 0.4); }
+}
+
 .controls-btn-jail-fine {
   background: linear-gradient(135deg, #FFD700, #FFA500);
   color: #1a1a2e;
@@ -645,4 +697,55 @@
 @keyframes jailPulse {
   0%, 100% { border-color: #FF6B6B; }
   50% { border-color: rgba(255, 107, 107, 0.3); }
+}
+
+/* ==================== Spectator ==================== */
+.spectator-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.panel-spectators {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.panel-spectators-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 6px;
+}
+
+.panel-spectator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+}
+
+.panel-spectator-icon {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.panel-spectator-name {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

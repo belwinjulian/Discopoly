@@ -4,7 +4,9 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  padding: 8px;
+  padding: 4px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .board {
@@ -45,17 +47,17 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  min-width: 140px;
-  min-height: 140px;
+  min-width: 120px;
+  min-height: 120px;
 }
 
 .board-center-content {
   text-align: center;
-  padding: 16px;
+  padding: 10px;
 }
 
 .board-center-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   background: linear-gradient(135deg, #FFD700, #FF6B6B, #4ECDC4);
   -webkit-background-clip: text;
@@ -72,11 +74,11 @@
 }
 
 .board-center-action {
-  margin-top: 16px;
-  padding: 8px 12px;
+  margin-top: 10px;
+  padding: 6px 10px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-  max-width: 220px;
+  max-width: 200px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -106,18 +108,18 @@
 
 /* Sizing: normal spaces vs corners */
 .board-row .board-space {
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 44px;
 }
 
 .board-row .board-space-corner {
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 44px;
 }
 
 .board-col .board-space {
-  width: 52px;
-  height: 44px;
+  width: 46px;
+  height: 36px;
 }
 
 /* ==================== District Color Stripe ==================== */
@@ -166,7 +168,7 @@
 }
 
 .board-space-icon {
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1;
 }
 
@@ -174,8 +176,8 @@
   font-size: 7px;
   font-weight: 600;
   color: #ccc;
-  line-height: 1.2;
-  max-width: 62px;
+  line-height: 1.1;
+  max-width: 42px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -210,13 +212,13 @@
 }
 
 .board-space-token {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 7px;
+  font-size: 6px;
   font-weight: 700;
   color: #1a1a2e;
   border: 1px solid rgba(0, 0, 0, 0.3);
@@ -224,7 +226,7 @@
 }
 
 .board-token-emoji {
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1;
 }
 

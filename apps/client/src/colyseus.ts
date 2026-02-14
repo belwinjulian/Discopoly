@@ -10,6 +10,7 @@ export interface JoinOptions {
   displayName: string;
   avatarUrl: string;
   accessToken?: string;
+  channelId?: string;
 }
 
 /**

@@ -1,6 +1,15 @@
 import React, { useState } from "react";
 import { GameStateSnapshot, BoardSpaceState } from "../hooks/useGameState";
-import { DISTRICT_COLORS, DISTRICT_PROPERTIES, HOUSE_COST, HOTEL_COST } from "../data/boardSpaces";
+import {
+  DISTRICT_COLORS,
+  DISTRICT_PROPERTIES,
+  HOUSE_COST,
+  HOTEL_COST,
+  getSellableHouseProperties,
+  getSellableHotelProperties,
+  getHouseSellValue,
+  getHotelSellValue,
+} from "../data/boardSpaces";
 import "../styles/game.css";
 import "../styles/animations.css";
 
@@ -12,6 +21,8 @@ interface GameControlsProps {
   onSkipBuy: () => void;
   onBuildHouse: (spaceIndex: number) => void;
   onBuildHotel: (spaceIndex: number) => void;
+  onSellHouse: (spaceIndex: number) => void;
+  onSellHotel: (spaceIndex: number, convertToHouses: boolean) => void;
   onEndTurn: () => void;
   onPayJailFine: () => void;
   onUseJailCard: () => void;
@@ -31,6 +42,10 @@ function getBuildableProps(boardSpaces: BoardSpaceState[], sessionId: string, co
     if (!hasMonopoly(boardSpaces, sessionId, district)) continue;
     const cost = HOUSE_COST[district] || 100;
     if (coins < cost) continue;
+
+    // Can't build if any property in the district is mortgaged
+    const anyMortgaged = indices.some((idx) => boardSpaces[idx]?.isMortgaged);
+    if (anyMortgaged) continue;
 
     const houseCounts = indices.map((idx) => {
       const s = boardSpaces[idx];
@@ -58,6 +73,10 @@ function getHotelProps(boardSpaces: BoardSpaceState[], sessionId: string, coins:
     const cost = HOTEL_COST[district] || 100;
     if (coins < cost) continue;
 
+    // Can't build if any property in the district is mortgaged
+    const anyMortgaged = indices.some((idx) => boardSpaces[idx]?.isMortgaged);
+    if (anyMortgaged) continue;
+
     const allAtFour = indices.every((idx) => {
       const s = boardSpaces[idx];
       return s.houses === 4 || s.hasHotel;
@@ -82,11 +101,14 @@ export const GameControls: React.FC<GameControlsProps> = ({
   onSkipBuy,
   onBuildHouse,
   onBuildHotel,
+  onSellHouse,
+  onSellHotel,
   onEndTurn,
   onPayJailFine,
   onUseJailCard,
 }) => {
   const [showBuild, setShowBuild] = useState(false);
+  const [showSell, setShowSell] = useState(false);
 
   const activePlayers = Array.from(gameState.players.values())
     .filter((p) => p.isActive && !p.isBankrupt)
@@ -111,6 +133,11 @@ export const GameControls: React.FC<GameControlsProps> = ({
     ? getHotelProps(gameState.boardSpaces, mySessionId, myPlayer.coins)
     : [];
   const canBuild = buildableProps.length > 0 || hotelProps.length > 0;
+
+  // Selling info - can sell anytime during the game (not just on your turn)
+  const sellableHouseProps = getSellableHouseProperties(gameState.boardSpaces, mySessionId);
+  const sellableHotelProps = getSellableHotelProperties(gameState.boardSpaces, mySessionId);
+  const canSell = sellableHouseProps.length > 0 || sellableHotelProps.length > 0;
 
   return (
     <div className="game-controls">
@@ -155,9 +182,16 @@ export const GameControls: React.FC<GameControlsProps> = ({
 
           {/* Normal roll button (not in jail) */}
           {!myPlayer.inJail && !gameState.hasRolled && (
-            <button className="controls-btn controls-btn-roll" onClick={onRollDice}>
-              🎲 Roll Dice
-            </button>
+            <>
+              {myPlayer.doublesCount > 0 && (
+                <div className="controls-doubles-indicator">
+                  🎯 Doubles! Roll again ({myPlayer.doublesCount}/3)
+                </div>
+              )}
+              <button className="controls-btn controls-btn-roll" onClick={onRollDice}>
+                🎲 {myPlayer.doublesCount > 0 ? "Roll Again" : "Roll Dice"}
+              </button>
+            </>
           )}
 
           {gameState.awaitingBuy && currentSpace && (
@@ -177,7 +211,7 @@ export const GameControls: React.FC<GameControlsProps> = ({
                   className="controls-btn controls-btn-skip"
                   onClick={onSkipBuy}
                 >
-                  Skip
+                  🔨 Auction
                 </button>
               </div>
             </div>
@@ -188,9 +222,17 @@ export const GameControls: React.FC<GameControlsProps> = ({
               {!myPlayer.inJail && canBuild && (
                 <button
                   className="controls-btn controls-btn-build"
-                  onClick={() => setShowBuild(!showBuild)}
+                  onClick={() => { setShowBuild(!showBuild); setShowSell(false); }}
                 >
                   🏗️ Build {showBuild ? "▲" : "▼"}
+                </button>
+              )}
+              {!myPlayer.inJail && canSell && (
+                <button
+                  className="controls-btn controls-btn-sell"
+                  onClick={() => { setShowSell(!showSell); setShowBuild(false); }}
+                >
+                  💰 Sell {showSell ? "▲" : "▼"}
                 </button>
               )}
               <button
@@ -251,6 +293,70 @@ export const GameControls: React.FC<GameControlsProps> = ({
                       <span className="build-option-houses">🏠🏠🏠🏠 → 🏨</span>
                       <span className="build-option-cost">{cost} 🪙</span>
                     </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sell panel */}
+      {showSell && isMyTurn && gameState.hasRolled && !gameState.awaitingBuy && (
+        <div className="controls-build-panel controls-sell-panel">
+          {sellableHouseProps.length > 0 && (
+            <div className="build-section">
+              <span className="build-section-title">🏠 Sell House</span>
+              <div className="build-options">
+                {sellableHouseProps.map((idx) => {
+                  const space = gameState.boardSpaces[idx];
+                  const sellValue = getHouseSellValue(space.district);
+                  return (
+                    <button
+                      key={idx}
+                      className="build-option-btn sell-option-btn"
+                      onClick={() => onSellHouse(idx)}
+                      style={{ borderLeftColor: DISTRICT_COLORS[space.district] || "#555" }}
+                    >
+                      <span className="build-option-name">{space.name}</span>
+                      <span className="build-option-houses">
+                        {"🏠".repeat(space.houses)}
+                      </span>
+                      <span className="build-option-cost sell-value">+{sellValue} 🪙</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {sellableHotelProps.length > 0 && (
+            <div className="build-section">
+              <span className="build-section-title">🏨 Sell Hotel</span>
+              <div className="build-options">
+                {sellableHotelProps.map((idx) => {
+                  const space = gameState.boardSpaces[idx];
+                  const sellValue = getHotelSellValue(space.district);
+                  return (
+                    <div key={idx} className="sell-hotel-options">
+                      <button
+                        className="build-option-btn sell-option-btn"
+                        onClick={() => onSellHotel(idx, false)}
+                        style={{ borderLeftColor: DISTRICT_COLORS[space.district] || "#555" }}
+                      >
+                        <span className="build-option-name">{space.name}</span>
+                        <span className="build-option-houses">🏨 → ∅</span>
+                        <span className="build-option-cost sell-value">+{sellValue} 🪙</span>
+                      </button>
+                      <button
+                        className="build-option-btn sell-option-btn sell-convert-btn"
+                        onClick={() => onSellHotel(idx, true)}
+                        style={{ borderLeftColor: DISTRICT_COLORS[space.district] || "#555" }}
+                      >
+                        <span className="build-option-name">{space.name}</span>
+                        <span className="build-option-houses">🏨 → 🏠🏠🏠🏠</span>
+                        <span className="build-option-cost sell-value">+{sellValue} 🪙</span>
+                      </button>
+                    </div>
                   );
                 })}
               </div>

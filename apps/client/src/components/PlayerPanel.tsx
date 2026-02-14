@@ -9,12 +9,14 @@ interface PlayerPanelProps {
   gameState: GameStateSnapshot;
   mySessionId: string;
   onTradeWith?: (sessionId: string) => void;
+  isSpectator?: boolean;
 }
 
 export const PlayerPanel: React.FC<PlayerPanelProps> = ({
   gameState,
   mySessionId,
   onTradeWith,
+  isSpectator,
 }) => {
   const players = Array.from(gameState.players.values()).sort(
     (a, b) => a.playerIndex - b.playerIndex
@@ -102,6 +104,26 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
           );
         })}
       </div>
+
+      {/* Spectator list */}
+      {gameState.spectatorCount > 0 && (
+        <div className="panel-spectators">
+          <h4 className="panel-spectators-title">
+            Spectating ({gameState.spectatorCount})
+          </h4>
+          {Array.from(gameState.spectators.values()).map((spec) => (
+            <div key={spec.sessionId} className="panel-spectator">
+              <span className="panel-spectator-icon">👁</span>
+              <span className="panel-spectator-name">
+                {spec.displayName}
+                {spec.sessionId === mySessionId && (
+                  <span className="panel-me-tag"> (you)</span>
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

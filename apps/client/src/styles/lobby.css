@@ -256,19 +256,60 @@
   font-weight: 500;
 }
 
-.lobby-store-btn {
-  padding: 6px 16px;
+.lobby-action-btns {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.lobby-store-btn,
+.lobby-goals-btn,
+.lobby-achievements-btn {
+  padding: 6px 14px;
   font-size: 12px;
   font-weight: 600;
   border: none;
   border-radius: 6px;
-  background: linear-gradient(135deg, #9B59B6, #8E44AD);
   color: white;
   cursor: pointer;
   transition: all 0.2s;
 }
 
+.lobby-store-btn {
+  background: linear-gradient(135deg, #9B59B6, #8E44AD);
+}
+
+.lobby-goals-btn {
+  background: linear-gradient(135deg, #4ECDC4, #44B09E);
+}
+
+.lobby-achievements-btn {
+  background: linear-gradient(135deg, #F1C40F, #E67E22);
+  color: #1a1a2e;
+}
+
 .lobby-store-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(155, 89, 182, 0.3);
+}
+
+.lobby-goals-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(78, 205, 196, 0.3);
+}
+
+.lobby-achievements-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(241, 196, 15, 0.3);
+}
+
+.lobby-title-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(155, 89, 182, 0.2);
+  color: #BB86FC;
+  margin-left: 6px;
 }
