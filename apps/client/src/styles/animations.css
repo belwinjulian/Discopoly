@@ -84,29 +84,6 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* ==================== Dice Rolling Animation ==================== */
-.dice-rolling {
-  animation: diceShake 0.1s linear infinite;
-}
-
-.dice-result {
-  animation: diceSlam 0.4s cubic-bezier(0.2, 0.8, 0.2, 1.2);
-}
-
-@keyframes diceShake {
-  0% { transform: rotate(0deg) scale(1.1); }
-  25% { transform: rotate(-15deg) scale(1.15); }
-  50% { transform: rotate(15deg) scale(1.1); }
-  75% { transform: rotate(-10deg) scale(1.15); }
-  100% { transform: rotate(0deg) scale(1.1); }
-}
-
-@keyframes diceSlam {
-  0% { transform: scale(2) rotate(180deg); opacity: 0; }
-  60% { transform: scale(0.9) rotate(-5deg); opacity: 1; }
-  100% { transform: scale(1) rotate(0deg); }
-}
-
 /* ==================== Game Event Notifications ==================== */
 .game-event {
   position: fixed;

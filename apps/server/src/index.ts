@@ -1,4 +1,9 @@
 import "dotenv/config";
+import path from "path";
+import { fileURLToPath } from "url";
+import { existsSync } from "fs";
+import cors from "cors";
+import express from "express";
 import { Server } from "colyseus";
 import { GameRoom } from "./rooms/GameRoom.js";
 import { getPlayer, buyPiece, buyCosmetic, equipCosmetic, getPlayerStats, getPlayerAchievements } from "./db.js";
@@ -7,12 +12,17 @@ import { getCosmetic, ALL_COSMETICS } from "./cosmetics.js";
 import { getPlayerCurrentGoals } from "./goals.js";
 import { ACHIEVEMENTS } from "./achievements.js";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 const PORT = Number(process.env.PORT) || 2567;
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || "";
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || "";
 
 const gameServer = new Server({
+  gracefullyShutdown: false,
   express: (app) => {
+    app.use(cors());
+
     app.use((req: any, _res: any, next: any) => {
       if (req.headers["content-type"]?.includes("application/json")) {
         let body = "";
@@ -30,8 +40,8 @@ const gameServer = new Server({
       res.json({ status: "ok", game: "discopoly" });
     });
 
-    // Discord OAuth2 token exchange + user info endpoint
-    app.post("/discord_token", async (req: any, res: any) => {
+    // Discord OAuth2 token exchange handler (shared between /discord_token and /api/token)
+    const handleTokenExchange = async (req: any, res: any) => {
       const { code } = req.body || {};
       if (!code) {
         res.status(400).json({ error: "Missing code" });
@@ -86,7 +96,10 @@ const gameServer = new Server({
         console.error("Token exchange error:", error);
         res.status(500).json({ error: "Internal server error" });
       }
-    });
+    };
+
+    app.post("/discord_token", handleTokenExchange);
+    app.post("/api/token", handleTokenExchange);
 
     // Get player profile
     app.get("/player/:discordUserId", (req: any, res: any) => {
@@ -247,6 +260,17 @@ const gameServer = new Server({
         res.status(500).json({ error: "Internal server error" });
       }
     });
+
+    // ==================== Static File Serving (Production) ====================
+
+    const clientDistPath = path.join(__dirname, "..", "..", "client", "dist");
+    if (existsSync(clientDistPath)) {
+      app.use(express.static(clientDistPath));
+      app.get("*", (_req: any, res: any) => {
+        res.sendFile(path.join(clientDistPath, "index.html"));
+      });
+      console.log(`Serving client from ${clientDistPath}`);
+    }
   },
 });
 
@@ -255,4 +279,24 @@ gameServer.define("game", GameRoom).filterBy(["channelId"]);
 
 gameServer.listen(PORT).then(() => {
   console.log(`Discopoly server listening on port ${PORT}`);
+});
+
+// ==================== Graceful Shutdown ====================
+
+const shutdown = async (signal: string) => {
+  console.log(`Received ${signal}, shutting down gracefully...`);
+  await gameServer.gracefullyShutdown();
+  process.exit(0);
+};
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+  process.exit(1);
 });

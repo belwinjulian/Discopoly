@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PlayerState } from "./useGameState";
 import { playHop, playLand } from "../utils/sounds";
 
@@ -63,7 +63,8 @@ function getSpacePosition(
 
 export function usePieceAnimation(
   players: Map<string, PlayerState>,
-  boardRef: React.RefObject<HTMLDivElement | null>
+  boardRef: React.RefObject<HTMLDivElement | null>,
+  diceRolling: boolean = false
 ): AnimationResult {
   const prevPositions = useRef<Map<string, number>>(new Map());
   const [animState, setAnimState] = useState<AnimationState>({
@@ -76,6 +77,7 @@ export function usePieceAnimation(
   });
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAnimatingRef = useRef(false);
+  const pendingMoveRef = useRef<{ player: PlayerState; oldPos: number } | null>(null);
 
   // Cleanup timers on unmount
   useEffect(() => {
@@ -84,53 +86,15 @@ export function usePieceAnimation(
     };
   }, []);
 
-  // Detect position changes and trigger animation
-  useEffect(() => {
-    // Don't start a new animation while one is running
-    if (isAnimatingRef.current) {
-      // Still update prev positions for non-animating players
-      players.forEach((player, sessionId) => {
-        if (sessionId !== animState.animatingSessionId) {
-          prevPositions.current.set(sessionId, player.position);
-        }
-      });
-      return;
-    }
-
-    let movedPlayer: PlayerState | null = null;
-    let oldPos = -1;
-
-    players.forEach((player, sessionId) => {
-      const prev = prevPositions.current.get(sessionId);
-      if (prev !== undefined && prev !== player.position && player.isActive && !player.isBankrupt) {
-        // This player moved
-        if (!movedPlayer) {
-          movedPlayer = player;
-          oldPos = prev;
-        }
-      }
-    });
-
-    // Update all prev positions
-    players.forEach((player, sessionId) => {
-      prevPositions.current.set(sessionId, player.position);
-    });
-
-    if (!movedPlayer || oldPos === -1 || !boardRef.current) return;
-
-    const player = movedPlayer as PlayerState;
+  // Helper: start the hop animation for a given player/oldPos
+  function startAnimation(player: PlayerState, oldPos: number) {
     const newPos = player.position;
-
-    // Don't animate if the move is a teleport (e.g., Detour sends to position 7)
-    // We still animate it, but we compute the path
     const path = computePath(oldPos, newPos);
     if (path.length === 0) return;
 
-    // Start animation
     isAnimatingRef.current = true;
 
-    // Get initial position (the old space)
-    const startPos = getSpacePosition(boardRef.current, oldPos);
+    const startPos = getSpacePosition(boardRef.current!, oldPos);
     if (!startPos) {
       isAnimatingRef.current = false;
       return;
@@ -145,12 +109,10 @@ export function usePieceAnimation(
       animPlayerIndex: player.playerIndex,
     });
 
-    // Animate through each step
     let stepIndex = 0;
 
     function advanceStep() {
       if (stepIndex >= path.length || !boardRef.current) {
-        // Animation complete
         isAnimatingRef.current = false;
         setAnimState((prev) => ({
           ...prev,
@@ -183,15 +145,65 @@ export function usePieceAnimation(
       stepIndex++;
 
       if (stepIndex <= path.length) {
-        // Schedule next step (or the cleanup after the final step)
-        const delay = stepIndex <= path.length - 1 ? HOP_DURATION_MS : 350; // longer pause on final
+        const delay = stepIndex <= path.length - 1 ? HOP_DURATION_MS : 350;
         animTimerRef.current = setTimeout(advanceStep, delay);
       }
     }
 
-    // Start first hop after a brief initial pause
     animTimerRef.current = setTimeout(advanceStep, 50);
-  }, [players, boardRef]);
+  }
+
+  // Detect position changes and trigger animation (or defer if dice rolling)
+  useEffect(() => {
+    // Don't start a new animation while one is running
+    if (isAnimatingRef.current) {
+      players.forEach((player, sessionId) => {
+        if (sessionId !== animState.animatingSessionId) {
+          prevPositions.current.set(sessionId, player.position);
+        }
+      });
+      return;
+    }
+
+    let movedPlayer: PlayerState | null = null;
+    let oldPos = -1;
+
+    players.forEach((player, sessionId) => {
+      const prev = prevPositions.current.get(sessionId);
+      if (prev !== undefined && prev !== player.position && player.isActive && !player.isBankrupt) {
+        if (!movedPlayer) {
+          movedPlayer = player;
+          oldPos = prev;
+        }
+      }
+    });
+
+    // Update all prev positions
+    players.forEach((player, sessionId) => {
+      prevPositions.current.set(sessionId, player.position);
+    });
+
+    if (!movedPlayer || oldPos === -1 || !boardRef.current) return;
+
+    const player = movedPlayer as PlayerState;
+
+    // If dice are still rolling, defer the move
+    if (diceRolling) {
+      pendingMoveRef.current = { player, oldPos };
+      return;
+    }
+
+    startAnimation(player, oldPos);
+  }, [players, boardRef, diceRolling]);
+
+  // Flush pending move when dice finish rolling
+  useEffect(() => {
+    if (!diceRolling && pendingMoveRef.current && !isAnimatingRef.current && boardRef.current) {
+      const { player, oldPos } = pendingMoveRef.current;
+      pendingMoveRef.current = null;
+      startAnimation(player, oldPos);
+    }
+  }, [diceRolling]);
 
   return { ...animState, isAnimatingRef };
 }

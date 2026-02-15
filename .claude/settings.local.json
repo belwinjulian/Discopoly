@@ -4,7 +4,14 @@
       "Bash(lsof:*)",
       "Bash(curl:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx vite build:*)"
+      "Bash(npx vite build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nPrepare server for production deployment\n\n- Add dotenv/config import so env vars load in production\n- Set MIN_PLAYERS to 2 \\(was 1 for dev testing\\)\n- Add SQLite WAL files to .gitignore\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(timeout 5 npm start:*)",
+      "Bash(npm run build:server:*)",
+      "Bash(kill:*)"
     ]
   }
 }

@@ -92,6 +92,9 @@ export const App: React.FC = () => {
   const [loadingMessage, setLoadingMessage] = useState("Connecting...");
   const [connectionError, setConnectionError] = useState("");
 
+  // Dice rolling state (blocks piece movement until dice finish)
+  const [diceRolling, setDiceRolling] = useState(false);
+
   // Animation states
   const [showTurnSplash, setShowTurnSplash] = useState(false);
   const [turnSplashKey, setTurnSplashKey] = useState(0);
@@ -116,7 +119,8 @@ export const App: React.FC = () => {
   // Piece animation hook
   const pieceAnim = usePieceAnimation(
     gameState?.players ?? new Map(),
-    boardRef
+    boardRef,
+    diceRolling
   );
 
   // Initialize Discord SDK and connect to Colyseus
@@ -241,8 +245,9 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (!gameState || gameState.phase !== "playing") return;
 
-    // Don't auto-end while piece animation is running, a card is displayed,
+    // Don't auto-end while dice are rolling, piece animation is running, a card is displayed,
     // an auction is active, a trade is pending, or bankruptcy negotiation is active
+    if (diceRolling) return;
     if (pieceAnim.isAnimating) return;
     if (gameState.drawnCard.deck !== "") return;
     if (gameState.activeAuction.status === "active") return;
@@ -263,7 +268,7 @@ export const App: React.FC = () => {
         ? canPlayerBuild(gameState.boardSpaces, mySessionId, myPlayer.coins)
         : false;
 
-      if (!hasBuildOptions && !myPlayer?.inJail) {
+      if (!hasBuildOptions) {
         if (autoEndTimerRef.current) clearTimeout(autoEndTimerRef.current);
         autoEndTimerRef.current = setTimeout(() => {
           sendMessage("end_turn");
@@ -274,7 +279,14 @@ export const App: React.FC = () => {
     return () => {
       if (autoEndTimerRef.current) clearTimeout(autoEndTimerRef.current);
     };
-  }, [gameState?.hasRolled, gameState?.awaitingBuy, gameState?.currentPlayerIndex, gameState?.boardSpaces, gameState?.drawnCard.deck, gameState?.activeAuction.status, gameState?.activeTrade.status, gameState?.bankruptcyNegotiation.status, mySessionId, sendMessage, pieceAnim.isAnimating]);
+  }, [gameState?.hasRolled, gameState?.awaitingBuy, gameState?.currentPlayerIndex, gameState?.boardSpaces, gameState?.drawnCard.deck, gameState?.activeAuction.status, gameState?.activeTrade.status, gameState?.bankruptcyNegotiation.status, mySessionId, sendMessage, pieceAnim.isAnimating, diceRolling]);
+
+  // Safety: reset diceRolling when hasRolled becomes false (turn change / unmount)
+  useEffect(() => {
+    if (!gameState?.hasRolled) {
+      setDiceRolling(false);
+    }
+  }, [gameState?.hasRolled]);
 
   // Piece selection
   const handleSelectPiece = useCallback((pieceId: string) => {
@@ -555,6 +567,8 @@ export const App: React.FC = () => {
           dice1={gameState.dice1}
           dice2={gameState.dice2}
           visible={gameState.hasRolled}
+          onRollStart={() => setDiceRolling(true)}
+          onRollComplete={() => setDiceRolling(false)}
         />
 
         {/* Board */}

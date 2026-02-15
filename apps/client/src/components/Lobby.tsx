@@ -32,7 +32,7 @@ export const Lobby: React.FC<LobbyProps> = ({
   const [showAchievements, setShowAchievements] = useState(false);
   const isHost = gameState.hostSessionId === mySessionId;
   const players = Array.from(gameState.players.values());
-  const canStart = players.length >= 1; // TODO: change back to 2 for production
+  const canStart = players.length >= 2;
 
   const myPlayer = gameState.players.get(mySessionId);
   const ownedPieces = playerStoreData?.ownedPieces || ["car", "tophat", "dog", "rocket", "bolt", "guitar"];
@@ -55,8 +55,8 @@ export const Lobby: React.FC<LobbyProps> = ({
       <div className="lobby-players">
         <h2>
           Players ({players.length}/6)
-          {players.length < 1 && (
-            <span className="lobby-hint"> - Need at least 1 to start</span>
+          {players.length < 2 && (
+            <span className="lobby-hint"> - Need at least 2 to start</span>
           )}
         </h2>
         <div className="lobby-player-list">
