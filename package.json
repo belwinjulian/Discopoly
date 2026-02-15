@@ -7,6 +7,9 @@
     "apps/client",
     "apps/server"
   ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start:client": "npm run dev --workspace=apps/client",
     "start:server": "npm run dev --workspace=apps/server",
