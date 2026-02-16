@@ -1,9 +1,13 @@
 import Database, { type Database as DatabaseType } from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
+import { mkdirSync } from "fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, "..", "discopoly.db");
+
+// Ensure the directory exists before opening the database
+mkdirSync(path.dirname(DB_PATH), { recursive: true });
 
 const FREE_PIECES = ["car", "tophat", "dog", "rocket", "bolt", "guitar"];
 const STARTING_GEMS = 30;
