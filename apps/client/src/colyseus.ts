@@ -1,9 +1,9 @@
 import { Client, Room } from "@colyseus/sdk";
 
-// Use relative path "/colyseus" so requests go through Discord's proxy.
-// Discord's URL Mapping with prefix "/colyseus" forwards to the tunnel,
-// and Vite's dev proxy rewrites "/colyseus" → localhost:2567.
-const client = new Client("/colyseus");
+// In dev: "/colyseus" routes through Vite proxy → localhost:2567
+// In prod: "" routes through Discord's "/" URL mapping → Railway server directly
+const colyseusEndpoint = import.meta.env.VITE_COLYSEUS_URL ?? "/colyseus";
+const client = new Client(colyseusEndpoint);
 
 export interface JoinOptions {
   discordUserId: string;

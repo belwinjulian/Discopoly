@@ -23,14 +23,6 @@ const gameServer = new Server({
   express: (app) => {
     app.use(cors());
 
-    // Strip /colyseus prefix — Discord's URL mapping passes the full path through
-    app.use((req: any, _res: any, next: any) => {
-      if (req.url.startsWith("/colyseus")) {
-        req.url = req.url.replace(/^\/colyseus/, "") || "/";
-      }
-      next();
-    });
-
     app.use((req: any, _res: any, next: any) => {
       if (req.headers["content-type"]?.includes("application/json")) {
         let body = "";
