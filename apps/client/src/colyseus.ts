@@ -1,9 +1,9 @@
 import { Client, Room } from "@colyseus/sdk";
 
 // In dev: "/colyseus" routes through Vite proxy → localhost:2567
-// In prod: "" routes through Discord's "/" URL mapping → Railway server directly
-const colyseusEndpoint = import.meta.env.VITE_COLYSEUS_URL ?? "/colyseus";
-const client = new Client(colyseusEndpoint);
+// In prod: connect directly (no prefix needed, same server serves client)
+const isDev = import.meta.env.DEV;
+const client = new Client(isDev ? "/colyseus" : "/");
 
 export interface JoinOptions {
   discordUserId: string;
