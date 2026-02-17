@@ -11,7 +11,9 @@
       "Bash(ls:*)",
       "Bash(timeout 5 npm start:*)",
       "Bash(npm run build:server:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

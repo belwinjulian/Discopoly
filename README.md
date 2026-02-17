@@ -11,7 +11,7 @@ A Monopoly-inspired city-building board game that runs directly inside **Discord
 1. **Add the bot** to your Discord server using the link above
 2. **Join a voice channel** in your server
 3. Click the **Activities** rocket icon in the voice channel toolbar
-4. Select **Discopoly** from the list
+4. Select **Landlord Tycoon** from the list
 5. Wait for friends to join, then the host clicks **Start Game**
 
 That's it — no downloads, no sign-ups, no extra setup.
